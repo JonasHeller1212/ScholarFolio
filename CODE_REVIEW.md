@@ -8,11 +8,11 @@
 
 | Severity | Count | Top Themes |
 |----------|-------|------------|
-| Critical | 5 | Leaked API key, SSRF, race conditions, React anti-patterns |
-| High | 9 | Crashes on empty data, XSS, memory leaks, wrong API usage |
-| Medium | 11 | Code duplication, dead code, accessibility, false positives |
-| Low | 8 | Over-aggressive normalization, stubs, minor UX bugs |
-| **Total** | **33** | |
+| Critical | 7 | Leaked API key, SSRF, XSS via innerHTML, race conditions, React anti-patterns |
+| High | 13 | Crashes on empty data, XSS, memory leaks, wrong API usage, duplicate types, unvalidated fetches |
+| Medium | 17 | Code duplication, dead code, accessibility, false positives, type mismatches, missing config |
+| Low | 13 | Over-aggressive normalization, stubs, dead code, test gaps, version mismatch |
+| **Total** | **50** | |
 
 ---
 
@@ -183,11 +183,107 @@
 
 ---
 
+## Additional Findings (Types, Config, Content Script, Edge Function)
+
+### CRITICAL
+
+### C6. XSS via innerHTML in content script
+- **File:** `src/content.tsx:87-138, 182-186`
+- `container.innerHTML` and `metricsDiv.innerHTML` interpolate values from scraped page data. A malicious Scholar page could inject script content.
+- **Fix:** Use `document.createElement` + `textContent` instead of `innerHTML`.
+
+### C7. Wildcard CORS on edge function
+- **File:** `supabase/functions/scholar/index.ts:11`
+- `Access-Control-Allow-Origin: *` allows any website to call the API and consume SerpAPI quota.
+- **Fix:** Restrict to the deployed frontend domain(s).
+
+### HIGH
+
+### H10. Duplicate and conflicting type definitions
+- **Files:** `src/types/index.ts` vs `src/types/scholar.ts`
+- Both define `JournalRanking`, `Publication`, `Metrics`, etc. with structural differences (e.g., `absRanking` vs `abs`, missing `jcr`/`abdc` fields in one). Components import from different files, creating silent type mismatches.
+- **Fix:** Consolidate to a single canonical type file.
+
+### H11. Unvalidated external fetch in content script
+- **File:** `src/content.tsx:4-16, 163-193`
+- Fetches arbitrary URLs from scraped `href` attributes without origin validation or timeouts.
+- **Fix:** Validate URLs match `scholar.google.com` before fetching. Add `AbortController` timeouts.
+
+### H12. Source maps enabled in production
+- **File:** `vite.config.ts:59`
+- `sourcemap: true` unconditionally exposes source code in production extension builds.
+- **Fix:** Use `sourcemap: process.env.NODE_ENV !== 'production'`.
+
+### H13. Edge function uses service role key without need
+- **File:** `supabase/functions/scholar/index.ts:20-22`
+- Edge function uses `SUPABASE_SERVICE_ROLE_KEY` (full DB privileges). If compromised, no RLS protection.
+- **Fix:** Use more restrictive policies; consider anon key for reads.
+
+### MEDIUM
+
+### M18. Division by zero in content script self-citation rate
+- **File:** `src/content.tsx:71`
+- `selfCitations / totalCitations` produces `NaN` when `totalCitations` is 0.
+- **Fix:** Guard with `totalCitations > 0 ? ... : 0`.
+
+### M19. Naive self-citation estimation with name parsing bug
+- **File:** `src/content.tsx:64-69`
+- Assumes 20% self-citation rate (arbitrary). `data.name.split(' ')[1]` assumes Western name ordering, breaks for single-word names.
+- **Fix:** Use last element of split array; label estimate with disclaimer.
+
+### M20. Singleton scraper with unresolved async constructor
+- **File:** `src/utils/scholarScraper.ts:20-22, 278`
+- Constructor calls async `initializeDriver()` without await. `driver` may be `null` when methods are called.
+- **Fix:** Use lazy initialization pattern with awaitable promise.
+
+### M21. Missing vitest configuration
+- **File:** `vite.config.ts`
+- No `test` block despite using vitest. Missing `setupFiles`, `environment`, `globals`.
+- **Fix:** Add `test: { globals: true, environment: 'jsdom', setupFiles: './src/test/setup.ts' }`.
+
+### M22. `publicationsPerYear` typed as string
+- **Files:** `src/types/scholar.ts:32`, `src/types/index.ts:33`
+- Numeric concept stored as string; consumers must parse back.
+- **Fix:** Type as `number`, format only at display layer.
+
+### M23. `citationsPerYear` key type inconsistency
+- **File:** `src/types/index.ts:34` vs `src/types/index.ts:104-106`
+- `Metrics.citationsPerYear` uses `Record<string, number>`, `CitationChartProps` uses `Record<number, number>`.
+- **Fix:** Standardize to `Record<string, number>`.
+
+### M24. No automated cache cleanup in database
+- **File:** `supabase/migrations/20250521185421_proud_swamp.sql:41-48`
+- `clean_expired_scholar_cache()` defined but never scheduled.
+- **Fix:** Add `pg_cron` job or call from edge function.
+
+### LOW
+
+### L34. Non-null assertion in `main.tsx`
+- **File:** `src/main.tsx:6`
+- `document.getElementById('root')!` crashes without meaningful error if element missing.
+
+### L35. Hardcoded Chrome user agent string
+- **File:** `src/utils/scholarScraper.ts:36`
+- UA string for Chrome 120 becomes outdated quickly.
+
+### L36. Version mismatch: package.json vs manifest.json
+- **Files:** `package.json` (`0.9.16`) vs `manifest.json` (`1.0.0`)
+
+### L37. Missing test coverage
+- Tests only cover h-index, g-index, i10-index, and growth-metrics. No tests for URL validation, journal matching, scraping logic, edge function, or content script.
+
+### L38. Unused imports in content.tsx
+- `createRoot` and `./index.css` imported but never used.
+
+---
+
 ## Priority Recommendations
 
 1. **Immediately** rotate and move the SerpAPI key to environment variables (#1)
-2. **Immediately** restrict CORS proxy URLs to scholar.google.com only (#2)
+2. **Immediately** fix XSS via innerHTML in content script (#C6) and restrict CORS (#2, #C7)
 3. **Soon** fix crashes on empty data (#6, #11) and memory leaks (#12)
 4. **Soon** move `SocialLinks` outside `App` and fix the stale closure (#4, #5)
-5. **Plan** consolidate the duplicate `MetricsCalculator` (#15)
-6. **Plan** add modal accessibility (#24) and fix list keys (#22)
+5. **Soon** consolidate duplicate type definitions (#H10) and `MetricsCalculator` classes (#15)
+6. **Soon** disable source maps in production (#H12)
+7. **Plan** add modal accessibility (#24) and fix list keys (#22)
+8. **Plan** expand test coverage (#L37) and add vitest config (#M21)
