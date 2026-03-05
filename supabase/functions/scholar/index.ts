@@ -1,11 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.39.3";
 import { getJson } from "npm:serpapi@2.0.0";
-import DOMPurify from "npm:dompurify@3.0.8";
-import { JSDOM } from "npm:jsdom@24.0.0";
-
-// Initialize DOMPurify with JSDOM
-const window = new JSDOM('').window;
-const purify = DOMPurify(window);
 
 const ALLOWED_ORIGINS = [
   'https://scholarmetricsanalyzer.netlify.app',
@@ -250,13 +244,12 @@ function extractScholarUserId(url) {
       throw new Error('Invalid or missing user ID in URL');
     }
     
-    // Sanitize user ID (should only contain alphanumeric and some special chars)
-    const sanitizedUserId = purify.sanitize(userId, {ALLOWED_TAGS: [], ALLOWED_ATTR: []});
-    if (sanitizedUserId !== userId) {
+    // Validate user ID contains only safe characters (alphanumeric, hyphens, underscores)
+    if (!/^[a-zA-Z0-9_-]+$/.test(userId)) {
       throw new Error('User ID contains invalid characters');
     }
-    
-    return sanitizedUserId;
+
+    return userId;
   } catch (e) {
     console.error('Error extracting user ID:', e);
     throw new Error('Invalid URL format. Please provide a valid Google Scholar profile URL.');
