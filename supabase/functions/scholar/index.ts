@@ -8,7 +8,7 @@ const window = new JSDOM('').window;
 const purify = DOMPurify(window);
 
 const ALLOWED_ORIGINS = [
-  'https://scholar-metrics.netlify.app',
+  'https://scholarmetricsanalyzer.netlify.app',
   'http://localhost:5173',
   'http://localhost:3000'
 ];
