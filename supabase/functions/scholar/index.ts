@@ -7,13 +7,26 @@ import { JSDOM } from "npm:jsdom@24.0.0";
 const window = new JSDOM('').window;
 const purify = DOMPurify(window);
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
+const ALLOWED_ORIGINS = [
+  'https://scholar-metrics.netlify.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
 
-const CACHE_DURATION = 3600; // 1 hour in seconds
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('Origin') || '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  };
+}
+
+// In-flight request coalescing to prevent duplicate SerpAPI calls
+const inflightRequests = new Map<string, Promise<any>>();
+
+const CACHE_DURATION = 86400; // 24 hours in seconds
 const SERPAPI_KEY = Deno.env.get('SERPAPI_KEY') ?? '';
 
 const supabase = createClient(
@@ -30,37 +43,29 @@ async function fetchScholarProfile(authorId) {
     
     console.log(`Fetching profile for author ID: ${authorId}`);
     
+    // Single API call fetches both author profile and publications
     const params = {
       api_key: SERPAPI_KEY,
-      engine: "google_scholar_author",
-      author_id: authorId,
-    };
-
-    const authorData = await getJson(params);
-    
-    if (!authorData.author) {
-      console.error("Author profile not found:", authorData);
-      throw new Error("Author profile not found");
-    }
-    
-    // Fetch author's publications
-    const publicationsParams = {
-      ...params,
       engine: "google_scholar_author",
       author_id: authorId,
       sort: "pubdate",
       num: 100
     };
 
-    const publicationsData = await getJson(publicationsParams);
+    const authorData = await getJson(params);
 
-    if (!publicationsData.articles) {
-      console.error("No publications data found:", publicationsData);
+    if (!authorData.author) {
+      console.error("Author profile not found:", authorData);
+      throw new Error("Author profile not found");
+    }
+
+    if (!authorData.articles) {
+      console.error("No publications data found:", authorData);
       throw new Error("Failed to fetch publications");
     }
 
     // Transform publications to match frontend schema
-    const publications = (publicationsData.articles || []).map(article => ({
+    const publications = (authorData.articles || []).map(article => ({
       title: article.title || "",
       authors: (article.authors || "").split(", "),
       venue: article.publication || "",
@@ -259,6 +264,8 @@ function extractScholarUserId(url) {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   // Handle CORS
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -272,25 +279,25 @@ Deno.serve(async (req) => {
     } catch (e) {
       return new Response(
         JSON.stringify({ error: "Invalid request format", details: e.message }),
-        { 
+        {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
-    
+
     const { profileUrl } = requestData;
-    
+
     if (!profileUrl) {
       return new Response(
         JSON.stringify({ error: "Profile URL is required" }),
-        { 
+        {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
-    
+
     console.log(`Processing request for URL: ${profileUrl}`);
 
     // Extract user ID from URL
@@ -300,15 +307,15 @@ Deno.serve(async (req) => {
     } catch (error) {
       return new Response(
         JSON.stringify({ error: error.message }),
-        { 
+        {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
-    
+
     console.log(`Extracted user ID: ${authorId}`);
-    
+
     // Create normalized URL for caching
     const normalizedUrl = `https://scholar.google.com/citations?user=${authorId}`;
 
@@ -339,14 +346,24 @@ Deno.serve(async (req) => {
     }
 
     console.log("Cache miss, fetching fresh data");
-    
-    // Fetch fresh data
-    const data = await fetchScholarProfile(authorId);
+
+    // Coalesce concurrent requests for the same author to avoid duplicate SerpAPI calls
+    let dataPromise = inflightRequests.get(authorId);
+    if (!dataPromise) {
+      dataPromise = fetchScholarProfile(authorId).finally(() => {
+        inflightRequests.delete(authorId);
+      });
+      inflightRequests.set(authorId, dataPromise);
+    } else {
+      console.log("Coalescing with in-flight request for:", authorId);
+    }
+
+    const data = await dataPromise;
 
     // Cache the result
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + CACHE_DURATION);
-    
+
     const { error: upsertError } = await supabase
       .from('scholar_cache')
       .upsert({
@@ -363,18 +380,18 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify(data),
-      { 
+      {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     );
   } catch (error) {
     console.error("Edge function error:", error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message || "Failed to fetch scholar profile",
         details: error.toString()
       }),
-      { 
+      {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
