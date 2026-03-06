@@ -15,8 +15,8 @@ export function ErrorModal({ message, onClose }: ErrorModalProps) {
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
-              <AlertCircle className="w-6 h-6 text-red-600" />
+            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+              <AlertCircle className="w-6 h-6 text-gray-500" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">Error</h3>
           </div>

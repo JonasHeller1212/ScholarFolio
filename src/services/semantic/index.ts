@@ -7,7 +7,7 @@ const SEMANTIC_SCHOLAR_API = 'https://api.semanticscholar.org/graph/v1';
 export class SemanticScholarService {
   private readonly headers = {
     'Accept': 'application/json',
-    'User-Agent': 'Scholar Metrics Analyzer/1.0',
+    'User-Agent': 'ResearchPortfolio/1.0',
   };
 
   public async searchByGoogleScholarId(googleScholarId: string): Promise<any> {

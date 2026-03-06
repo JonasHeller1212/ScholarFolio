@@ -26,7 +26,7 @@ function JournalRankingBadge({ ranking }: { ranking: JournalRanking }) {
         </span>
       )}
       {ranking.sjr && (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-800">
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 text-teal-800">
           <TrendingUp className="h-3 w-3 mr-0.5" />
           SJR {ranking.sjr}
         </span>

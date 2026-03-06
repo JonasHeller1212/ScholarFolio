@@ -4,8 +4,8 @@
 
 :root {
   color-scheme: light;
-  --gradient-start: #019DD4;
-  --gradient-end: #E84E10;
+  --gradient-start: #2d7d7d;
+  --gradient-end: #1f5c5c;
 }
 
 body {
@@ -46,11 +46,11 @@ body {
 
 ::-webkit-scrollbar-thumb {
   @apply rounded-full;
-  background: linear-gradient(135deg, #019DD4, #E84E10);
+  background: #2d7d7d;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #017ba8, #c04010);
+  background: #1f5c5c;
 }
 
 /* Loading animation */
@@ -67,11 +67,11 @@ body {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Mesh gradient background */
+/* Warm background */
 .mesh-bg {
-  background-color: #f8fafc;
+  background-color: #f5f0eb;
   background-image:
-    radial-gradient(at 20% 20%, rgba(1, 157, 212, 0.06) 0px, transparent 50%),
-    radial-gradient(at 80% 80%, rgba(232, 78, 16, 0.04) 0px, transparent 50%),
-    radial-gradient(at 50% 0%, rgba(1, 157, 212, 0.03) 0px, transparent 50%);
+    radial-gradient(at 20% 20%, rgba(45, 125, 125, 0.04) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(30, 41, 59, 0.03) 0px, transparent 50%),
+    radial-gradient(at 50% 0%, rgba(45, 125, 125, 0.02) 0px, transparent 50%);
 }
