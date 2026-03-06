@@ -1,59 +1,101 @@
 # Scholar Metrics Analyzer
 
-A powerful web application for analyzing and visualizing Google Scholar profiles with advanced metrics and analytics.
+Analyze and visualize Google Scholar profiles with citation metrics, collaboration networks, and publication insights.
+
+**Live:** [scholarmetricsanalyzer.netlify.app](https://scholarmetricsanalyzer.netlify.app/)
 
 ## Features
 
-- Advanced citation metrics (h-index, g-index, i10-index)
-- Publication analysis and trends
-- Citation network visualization
-- Co-author network analysis
-- Visual metrics display
-- Detailed tooltips with metric explanations
-- Real-time profile analysis
-- Mobile-responsive design
+- **Citation analytics** -- h-index, g-index, i10-index, h5-index, citation growth rates
+- **Trend visualization** -- yearly citation charts with projections and year-over-year growth
+- **Co-author network** -- D3-powered collaboration graph with frequency analysis
+- **Publication list** -- sortable table with journal ranking badges (SJR, JCR, FT50, ABS, ABDC)
+- **Career analysis** -- publication velocity, collaboration patterns, solo author rate
+- **Caching** -- 24-hour Supabase cache to minimize external API calls
 
-## Live Demo
+## Tech Stack
 
-Visit [Scholar Metrics Analyzer](https://scholarmetricsanalyzer.netlify.app/) to try it out!
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, TypeScript, Tailwind CSS, Recharts, D3.js |
+| Backend | Supabase Edge Functions (Deno) |
+| Data | SerpAPI (primary) with direct Scholar scraping fallback |
+| Hosting | Netlify |
+| Cache | Supabase PostgreSQL |
 
-## Development
+## Getting Started
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/scholar-metrics-analyzer.git
-   ```
+### Prerequisites
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+- Node.js 18+
+- npm
+- A [Supabase](https://supabase.com) project (for the edge function and cache)
+- A [SerpAPI](https://serpapi.com) key (optional -- falls back to direct scraping)
 
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
+### Setup
 
-4. Make your changes
-5. The application will automatically rebuild when files change
+```bash
+git clone https://github.com/JonasHeller1212/ScholarMetricsAnalyzer.git
+cd ScholarMetricsAnalyzer
+npm install
+```
 
-## Building for Production
+Create a `.env` file:
 
-1. Build the application:
-   ```bash
-   npm run build
-   ```
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
 
-2. The built files will be in the `dist` directory
+For the Supabase edge function, set these secrets:
+
+```bash
+supabase secrets set SERPAPI_KEY=your-serpapi-key
+```
+
+### Development
+
+```bash
+npm run dev
+```
+
+### Build
+
+```bash
+npm run build
+```
+
+### Tests
+
+```bash
+npm test
+```
+
+## Architecture
+
+```
+src/
+  components/     UI components (React + Tailwind)
+  services/       API clients and data fetching
+  types/          TypeScript interfaces
+  utils/          Helper functions
+  data/           Static data (metric descriptions, journal rankings)
+
+supabase/
+  functions/      Edge function for Scholar data fetching
+  migrations/     Database schema (cache table)
+```
+
+The edge function tries SerpAPI first. If SerpAPI returns a 429 (rate limit) or 5xx error, it falls back to scraping Google Scholar directly using server-side DOM parsing.
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes
+4. Push to the branch
+5. Open a pull request
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+MIT -- see [LICENSE](LICENSE) for details.
