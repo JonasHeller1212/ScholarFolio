@@ -191,13 +191,13 @@ export function CareerAnalysis() {
 
                   <div>
                     <h4 className="text-xs font-medium text-gray-500 mb-2 flex items-center">
-                      <CheckCircle className="h-3.5 w-3.5 text-green-500 mr-1" />
+                      <CheckCircle className="h-3.5 w-3.5 text-blue-500 mr-1" />
                       Recommendations
                     </h4>
                     <ul className="text-xs text-gray-600 space-y-1">
                       {analysis.recommendations.map((rec, index) => (
                         <li key={index} className="flex items-start">
-                          <span className="text-green-500 mr-1">•</span>
+                          <span className="text-blue-500 mr-1">•</span>
                           {rec}
                         </li>
                       ))}

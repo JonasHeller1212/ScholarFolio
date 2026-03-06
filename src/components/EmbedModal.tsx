@@ -61,7 +61,7 @@ export function EmbedModal({ isOpen, onClose, scholarId }: EmbedModalProps) {
         
         <div className="p-6 space-y-4">
           <p className="text-sm text-gray-600">
-            Copy and paste this code into your website to embed your Scholar Metrics:
+            Copy and paste this code into your website to embed your Research Portfolio:
           </p>
           
           <div className="relative">

@@ -1,86 +1,76 @@
 # Changelog
 
-All notable changes to Scholar Metrics Analyzer will be documented in this file.
+All notable changes to Research Portfolio are documented here.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.9.16] - 2024-01-31
+## [0.10.0] - 2026-03-06
+
+### Added
+- SerpAPI fallback: direct Google Scholar scraping when SerpAPI is rate-limited (429) or unavailable
+- Custom SVG logo and favicon
+- Inter font and mesh gradient background
+- Pill-style tab navigation in profile view
+- Tailwind card shadow utilities
+
+### Changed
+- Overhauled landing page layout and typography
+- Modernized profile view with cleaner card design
+- Refined metrics cards with improved spacing and borders
+- Restricted CORS origins to deployed domain and localhost
+
+### Removed
+- Vite default favicon
+
+## [0.9.16] - 2025-01-31
 
 ### Added
 - Journal ranking badges (SJR, JCR, FT50, ABS, ABDC)
-- Extended journal database with more publications
+- Extended journal database
 - Improved journal matching algorithm
-- Detailed ranking information display
-- New test suite for metrics calculations
 
 ### Changed
 - Enhanced journal name normalization
 - Improved publication list display
 - Updated ranking badge styling
-- Optimized journal matching performance
-- Refined journal database structure
 
 ### Fixed
 - Journal ranking detection accuracy
 - Publication venue parsing
-- Journal name matching edge cases
-- Ranking badge display issues
-- Missing journal rankings
 
-## [0.9.15] - 2024-01-31
+## [0.9.15] - 2025-01-31
 
 ### Added
-- Current year-over-year growth rate display
+- Year-over-year growth rate display
 - Projected growth rate for current year
-- Enhanced citation trend visualization
-- Improved growth rate calculations
-- Time range selection for metrics
+- Time range selection for citation trends
 - Detailed tooltips for all metrics
 
 ### Changed
 - Optimized citation chart rendering
 - Enhanced growth rate display with color coding
-- Improved projection calculations
-- Updated metrics explanations
-- Refined mobile responsiveness
 
 ### Fixed
-- Citation projection display issues
-- Growth rate calculation accuracy
+- Citation projection calculations
+- Growth rate accuracy
 - Chart rendering performance
-- Year-over-year growth display
-- Loading state handling
 
-## [0.9.1] - 2024-01-30
+## [0.9.1] - 2025-01-30
 
 ### Added
-- Version indicator in UI
-- Automated changelog generation
-- Version history tracking
-- Deployment automation scripts
-- Improved build process
-- Scholar profile search helper modal
+- Scholar profile search modal
 - URL validation for Google Scholar profiles
-- Loading states and error handling for profile analysis
-- Social media integration with LinkedIn and GitHub
-- Comprehensive tooltips for all metrics
-- Advanced citation trend analysis with projections
+- Loading states and error handling
+- Social media links
+- Citation trend analysis with projections
+- Version indicator
 
 ### Changed
-- Updated package dependencies to latest versions
-- Streamlined deployment workflow
-- Enhanced documentation
-- Improved UI/UX with smoother transitions
-- Enhanced error messages with clear user guidance
-- Optimized profile data loading and analysis
-- Refined mobile responsiveness
+- Improved UI transitions
+- Enhanced error messages
+- Optimized profile data loading
 
 ### Fixed
-- Multiple exports issue in ProfileView component
-- Citation chart rendering optimization
-- Profile image fallback handling
+- Citation chart rendering
+- Profile image fallback
 - Search validation edge cases
-- Date formatting in changelog
-- Version numbering consistency
-- Build configuration issues

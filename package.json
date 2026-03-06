@@ -1,7 +1,7 @@
 {
-  "name": "scholar-metrics-extension",
+  "name": "research-portfolio",
   "private": true,
-  "version": "0.9.16",
+  "version": "0.10.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

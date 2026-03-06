@@ -55,12 +55,12 @@ export function Tooltip({ content, children, position = 'bottom' }: TooltipProps
             
             <div className="space-y-3">
               <div>
-                <p className="text-xs font-medium text-green-600 mb-1">Pros:</p>
+                <p className="text-xs font-medium text-gray-700 mb-1">Strengths:</p>
                 <p className="text-xs text-gray-600">{content.pros}</p>
               </div>
-              
+
               <div>
-                <p className="text-xs font-medium text-red-600 mb-1">Cons:</p>
+                <p className="text-xs font-medium text-gray-500 mb-1">Limitations:</p>
                 <p className="text-xs text-gray-600">{content.cons}</p>
               </div>
               

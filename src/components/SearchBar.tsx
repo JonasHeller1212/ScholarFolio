@@ -163,12 +163,12 @@ export function SearchBar({ onSearch, isLoading = false, compact = false, error:
           {isLoading ? (
             <>
               <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Analyzing...</span>
+              <span>Loading...</span>
             </>
           ) : (
             <>
               <Search className="h-4 w-4" />
-              <span>Analyze</span>
+              <span>Explore</span>
             </>
           )}
         </button>
@@ -205,7 +205,7 @@ export function SearchBar({ onSearch, isLoading = false, compact = false, error:
         <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center space-x-1">
             <Search className="h-3.5 w-3.5 gradient-icon" />
-            <span>Enter a Google Scholar profile URL to analyze metrics</span>
+            <span>Enter a Google Scholar profile URL to explore your profile</span>
           </div>
           <button
             type="button"
@@ -213,7 +213,7 @@ export function SearchBar({ onSearch, isLoading = false, compact = false, error:
             className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 transition-colors"
           >
             <BookOpen className="h-3.5 w-3.5" />
-            <span>Try a sample profile</span>
+            <span>See an example portfolio</span>
           </button>
         </div>
       )}

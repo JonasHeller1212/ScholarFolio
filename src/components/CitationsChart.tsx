@@ -46,7 +46,7 @@ const CustomBar = (props: any) => {
           >
             <path
               d="M 0 0 L 0 4"
-              stroke="#E84E10"
+              stroke="#94a3b8"
               strokeWidth="2"
               opacity="0.5"
             />
@@ -58,14 +58,14 @@ const CustomBar = (props: any) => {
           width={width}
           height={height}
           fill="url(#prediction-pattern)"
-          stroke="#E84E10"
+          stroke="#94a3b8"
           strokeWidth={1}
         />
       </g>
     );
   }
 
-  return <Rectangle x={x} y={y} width={width} height={height} fill="#019DD4" />;
+  return <Rectangle x={x} y={y} width={width} height={height} fill="#2d7d7d" />;
 };
 
 // Custom label component for growth rates
@@ -80,7 +80,7 @@ const GrowthLabel = (props: any) => {
     <text
       x={x + width / 2}
       y={y - 8}
-      fill={isPositive ? '#16a34a' : '#dc2626'}
+      fill={isPositive ? '#2d7d7d' : '#64748b'}
       textAnchor="middle"
       fontSize="11"
       fontWeight="500"
@@ -105,7 +105,7 @@ const CurrentYearGrowthLabel = (props: any) => {
         <text
           x={x + width / 2}
           y={y - 24}
-          fill={currentGrowth > 0 ? '#16a34a' : '#dc2626'}
+          fill={currentGrowth > 0 ? '#2d7d7d' : '#64748b'}
           textAnchor="middle"
           fontSize="11"
           fontWeight="500"
@@ -119,7 +119,7 @@ const CurrentYearGrowthLabel = (props: any) => {
         <text
           x={x + width / 2}
           y={y - 8}
-          fill="#e84e10"
+          fill="#94a3b8"
           textAnchor="middle"
           fontSize="11"
           fontWeight="500"
@@ -359,9 +359,7 @@ export function CitationsChart({ citationsPerYear }: CitationsChartProps) {
                         </>
                       )}
                       {data.yearOverYearGrowth !== 0 && (
-                        <div className={`text-xs ${
-                          data.yearOverYearGrowth > 0 ? 'text-green-600' : 'text-red-600'
-                        } border-t border-gray-100 pt-1 mt-1`}>
+                        <div className={`text-xs text-gray-600 border-t border-gray-100 pt-1 mt-1`}>
                           Year-over-Year Growth: {data.yearOverYearGrowth > 0 ? '+' : ''}{data.yearOverYearGrowth.toFixed(1)}%
                         </div>
                       )}
@@ -417,11 +415,11 @@ export function CitationsChart({ citationsPerYear }: CitationsChartProps) {
       <div className="space-y-2">
         <div className="flex items-center justify-end space-x-4 text-xs text-gray-500">
           <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 bg-[#019DD4]"></div>
+            <div className="w-3 h-3 bg-[#2d7d7d]"></div>
             <span>Actual Citations</span>
           </div>
           <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 bg-[#E84E10] bg-stripe"></div>
+            <div className="w-3 h-3 bg-[#94a3b8] bg-stripe"></div>
             <span>Projected</span>
           </div>
         </div>
@@ -435,7 +433,7 @@ export function CitationsChart({ citationsPerYear }: CitationsChartProps) {
                 <li>• Average growth rate shows citation momentum over selected time range ({timeRangeText})</li>
                 <li>• Peak year indicates highest citation impact period</li>
                 <li>• Projections are based on current year's citation rate</li>
-                <li>• Growth patterns help identify research impact trends</li>
+                <li>• Growth patterns help identify research reach over time</li>
                 <li>• Consider field-specific citation patterns when interpreting</li>
               </ul>
             </div>

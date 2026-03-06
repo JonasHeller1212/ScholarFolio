@@ -31,15 +31,15 @@ export function EmailCapture({ onSubmit }: EmailCaptureProps) {
 
   if (step === 2) {
     return (
-      <div className="bg-green-50 rounded-xl p-6 text-center">
-        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-6 h-6 text-green-600" />
+      <div className="bg-blue-50 rounded-xl p-6 text-center">
+        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="w-6 h-6 text-blue-600" />
         </div>
-        <h3 className="text-lg font-semibold text-green-900 mb-2">Thank You for Subscribing!</h3>
-        <p className="text-sm text-green-700 mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Thank You for Subscribing!</h3>
+        <p className="text-sm text-gray-700 mb-4">
           Your free guide "Advanced Academic Metrics: A Comprehensive Guide" has been sent to your inbox.
         </p>
-        <p className="text-xs text-green-600">
+        <p className="text-xs text-gray-600">
           Please check your email to confirm your subscription and access your guide.
         </p>
       </div>

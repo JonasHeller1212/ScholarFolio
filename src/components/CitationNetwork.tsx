@@ -206,11 +206,11 @@ export function CitationNetwork({ publications, fullScreen = false }: CitationNe
 
     gradient.append('stop')
       .attr('offset', '0%')
-      .attr('stop-color', '#019DD4');
+      .attr('stop-color', '#2d7d7d');
 
     gradient.append('stop')
       .attr('offset', '100%')
-      .attr('stop-color', '#E84E10');
+      .attr('stop-color', '#64748b');
 
     // Create the simulation with stronger forces
     simulationRef.current = d3.forceSimulation(nodes as d3.SimulationNode[])
@@ -265,7 +265,7 @@ export function CitationNetwork({ publications, fullScreen = false }: CitationNe
     // Add circles to nodes
     node.append('circle')
       .attr('r', d => Math.sqrt(showCitations ? d.sharedCitations / 5 : d.sharedPublications * 10))
-      .attr('fill', d => d.group === 1 ? '#019DD4' : '#E84E10')
+      .attr('fill', d => d.group === 1 ? '#2d7d7d' : '#64748b')
       .attr('fill-opacity', 0.8);
 
     // Update the node labels to use the extracted last name
@@ -434,11 +434,11 @@ export function CitationNetwork({ publications, fullScreen = false }: CitationNe
       <div className="relative h-[calc(100%-4rem)]">
         <div className="absolute top-2 right-2 flex items-center space-x-4 text-xs text-gray-500 z-10">
           <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 rounded-full bg-[#019DD4]" />
+            <div className="w-3 h-3 rounded-full bg-[#2d7d7d]" />
             <span>Main Author</span>
           </div>
           <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 rounded-full bg-[#E84E10]" />
+            <div className="w-3 h-3 rounded-full bg-[#64748b]" />
             <span>Co-authors</span>
           </div>
         </div>
