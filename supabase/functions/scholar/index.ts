@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.39.3";
 import { DOMParser } from "npm:linkedom@0.16.8";
 
 const ALLOWED_ORIGINS = [
-  'https://scholarmetricsanalyzer.netlify.app',
+  'https://researchfolio.netlify.app',
   'http://localhost:5173',
   'http://localhost:3000'
 ];
