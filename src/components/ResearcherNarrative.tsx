@@ -54,8 +54,13 @@ export function ResearcherNarrative({ data }: ResearcherNarrativeProps) {
     const phase = getProductivityPhase(publications);
     const topPaper = getMostCitedPaper(publications);
 
-    // Build research areas text from topics
-    const topicNames = topics.map(t => t.name).slice(0, 5);
+    // Build research areas text from topics (defensive: name may be object from SerpAPI)
+    const topicNames = topics.map(t => {
+      if (typeof t.name === 'object' && t.name !== null) {
+        return (t.name as any).title || '';
+      }
+      return String(t.name || '');
+    }).filter(Boolean).slice(0, 5);
     let topicsText = '';
     if (topicNames.length > 0) {
       if (topicNames.length === 1) {
