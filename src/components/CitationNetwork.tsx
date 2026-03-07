@@ -432,8 +432,11 @@ export function CitationNetwork({ publications, fullScreen = false }: CitationNe
         })
       );
 
+    // Container for all zoomable content
+    const container = svg.append('g').attr('class', 'zoom-container');
+
     // Links
-    const link = svg.append('g')
+    const link = container.append('g')
       .selectAll('line')
       .data(links)
       .join('line')
@@ -450,7 +453,7 @@ export function CitationNetwork({ publications, fullScreen = false }: CitationNe
       .attr('stroke-width', d => getLinkWidth(d));
 
     // Nodes
-    const node = svg.append('g')
+    const node = container.append('g')
       .selectAll('g')
       .data(nodes)
       .join('g')
@@ -537,11 +540,11 @@ export function CitationNetwork({ publications, fullScreen = false }: CitationNe
       }
     });
 
-    // Zoom
+    // Zoom — only transform the container, not individual node groups
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
       .on('zoom', (event) => {
-        svg.selectAll('g').attr('transform', event.transform);
+        container.attr('transform', event.transform);
       });
 
     svg.call(zoom);

@@ -29,7 +29,7 @@ export function calculateGrowthRates(
           return true;
       }
     })
-    .filter(year => year < currentYear) // Exclude current incomplete year
+    .filter(year => year < currentYear - 1) // Exclude current year AND prior year (Scholar data lags)
     .sort((a, b) => a - b);
 
   // Use last 3 years within the selected range for growth rate

@@ -10,7 +10,7 @@ export function calculateImpactTrend(
   const years = Object.keys(citationsPerYear)
     .map(Number)
     .filter(year => {
-      if (year >= currentYear) return false; // Exclude current incomplete year
+      if (year >= currentYear - 1) return false; // Exclude current year AND prior year (Scholar data lags)
       switch (timeRange) {
         case '5y':
           return year > currentYear - 5;
@@ -70,7 +70,7 @@ export function findPeakYear(
   const years = Object.keys(citationsPerYear)
     .map(Number)
     .filter(year => {
-      if (year >= currentYear) return false; // Exclude current incomplete year
+      if (year >= currentYear - 1) return false; // Exclude current year AND prior year (Scholar data lags)
       switch (timeRange) {
         case '5y':
           return year > currentYear - 5;
