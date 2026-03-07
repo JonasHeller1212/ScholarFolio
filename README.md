@@ -2,7 +2,7 @@
 
 Your research, at a glance — publication history, collaboration network, and research reach built from your Google Scholar profile.
 
-**Live:** [scholarmetricsanalyzer.netlify.app](https://scholarmetricsanalyzer.netlify.app/)
+**Live:** (https://researchfolio.netlify.app/)
 
 ## Features
 
