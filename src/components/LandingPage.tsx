@@ -110,24 +110,24 @@ export function LandingPage({ onSearch, loading, error, onNavigate }: LandingPag
       </nav>
 
       {/* Hero */}
-      <section className="relative pt-28 pb-24 px-6">
+      <section className="relative pt-16 pb-14 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="animate-fade-up animate-delay-150 font-serif text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-[#1e293b] mb-6 leading-[1.05]">
+          <h1 className="animate-fade-up animate-delay-150 font-serif text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-[#1e293b] mb-4 leading-[1.05]">
             Know your
             <br />
             <span className="gradient-text">research story</span>
           </h1>
 
-          <p className="animate-fade-up animate-delay-250 text-base md:text-lg text-[#64748b] max-w-xl mx-auto mb-14 leading-relaxed">
+          <p className="animate-fade-up animate-delay-250 text-base md:text-lg text-[#64748b] max-w-xl mx-auto mb-8 leading-relaxed">
             Paste your Google Scholar profile URL to see your publication history, collaboration network, and research reach — on one page.
           </p>
 
           {/* Search area */}
-          <div className="animate-fade-up-scale animate-delay-350 w-full max-w-xl mx-auto mb-3">
+          <div className="animate-fade-up-scale animate-delay-350 w-full max-w-xl mx-auto mb-2">
             <SearchBar onSearch={onSearch} isLoading={loading} error={error} />
           </div>
 
-          <p className="animate-fade-up animate-delay-350 text-xs text-[#94a3b8] italic mb-8">
+          <p className="animate-fade-up animate-delay-350 text-xs text-[#94a3b8] italic mb-4">
             Numbers here are context, not verdict. Use them to tell your story.
           </p>
 
@@ -143,10 +143,10 @@ export function LandingPage({ onSearch, loading, error, onNavigate }: LandingPag
       </section>
 
       {/* Features */}
-      <section id="features" className="py-24 px-6" ref={featuresRef}>
+      <section id="features" className="py-14 px-6" ref={featuresRef}>
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16 scroll-reveal">
-            <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#1e293b] mb-4">
+          <div className="text-center mb-10 scroll-reveal">
+            <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#1e293b] mb-3">
               Everything you need to understand your research
             </h2>
             <p className="text-sm text-[#64748b] max-w-lg mx-auto">
@@ -154,7 +154,7 @@ export function LandingPage({ onSearch, loading, error, onNavigate }: LandingPag
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 icon: BarChart,
@@ -174,9 +174,9 @@ export function LandingPage({ onSearch, loading, error, onNavigate }: LandingPag
             ].map((feature, index) => (
               <div
                 key={index}
-                className="scroll-reveal group relative bg-white rounded-2xl p-8 border border-gray-100 border-l-[3px] border-l-[#2d7d7d] shadow-card hover-lift"
+                className="scroll-reveal group relative bg-white rounded-2xl p-6 border border-gray-100 border-l-[3px] border-l-[#2d7d7d] shadow-card hover-lift"
               >
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#eaf4f4] mb-5">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#eaf4f4] mb-3">
                   <feature.icon className="h-5 w-5 text-[#2d7d7d]" />
                 </div>
                 <h3 className="text-base font-semibold text-[#1e293b] mb-2">{feature.title}</h3>
@@ -188,24 +188,24 @@ export function LandingPage({ onSearch, loading, error, onNavigate }: LandingPag
       </section>
 
       {/* Bottom CTA */}
-      <section className="py-24 px-6" ref={ctaRef}>
+      <section className="py-14 px-6" ref={ctaRef}>
         <div className="max-w-3xl mx-auto scroll-reveal">
-          <div className="bg-[#1e293b] rounded-2xl p-10 md:p-14 text-center">
-            <h2 className="font-serif text-2xl md:text-3xl font-bold text-white mb-4">
+          <div className="bg-[#1e293b] rounded-2xl p-8 md:p-10 text-center">
+            <h2 className="font-serif text-2xl md:text-3xl font-bold text-white mb-3">
               Ready to explore?
             </h2>
-            <p className="text-sm text-white/60 mb-4 font-serif italic">
+            <p className="text-sm text-white/60 mb-3 font-serif italic">
               Explore your research portfolio
             </p>
-            <p className="text-sm text-white/50 mb-10 max-w-md mx-auto">
+            <p className="text-sm text-white/50 mb-6 max-w-md mx-auto">
               Enter your Google Scholar profile URL below for an overview of your research portfolio.
             </p>
 
-            <div className="max-w-xl mx-auto mb-4">
+            <div className="max-w-xl mx-auto mb-3">
               <SearchBar onSearch={onSearch} isLoading={loading} />
             </div>
 
-            <p className="text-xs text-white/40 italic mb-8">
+            <p className="text-xs text-white/40 italic mb-5">
               Numbers here are context, not verdict. Use them to tell your story.
             </p>
 
