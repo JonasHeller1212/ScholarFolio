@@ -2,6 +2,8 @@
 
 **Your research, at a glance.**
 
+**Live:** (https://researchfolio.netlify.app/)
+
 Scholar Folio is a free, open-source research portfolio tool. Paste a Google Scholar profile URL and get a clear overview of your publication history, collaboration network, and research reach.
 
 ## What it is not
