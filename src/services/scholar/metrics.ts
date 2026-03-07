@@ -28,9 +28,12 @@ export class MetricsCalculator {
     const totalCitations = citations.reduce((sum, c) => sum + c, 0);
     
     // Calculate average citations per year using complete years only
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const cutoffYear = now.getMonth() < 6 ? currentYear - 1 : currentYear;
     const years = Object.keys(citationsPerYear)
       .map(Number)
-      .filter(year => year < new Date().getFullYear() - 1) // Exclude current year and prior year (Scholar lag)
+      .filter(year => year < cutoffYear)
       .sort();
     
     const avgCitationsPerYear = years.length > 0 
@@ -71,13 +74,13 @@ export class MetricsCalculator {
     let overallGrowthRate = 0;
     let validYearCount = 0;
 
-    // Get current year
-    const currentYear = new Date().getFullYear();
-    
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const cutoffYear = now.getMonth() < 6 ? currentYear - 1 : currentYear;
+
     // Use only the last 3 complete years for growth rate calculation
-    // Exclude currentYear AND currentYear-1 since Google Scholar data lags
     const lastThreeCompleteYears = years
-      .filter(year => year < currentYear - 1)
+      .filter(year => year < cutoffYear)
       .slice(-3);
 
     for (let i = 1; i < lastThreeCompleteYears.length; i++) {
@@ -101,9 +104,11 @@ export class MetricsCalculator {
   }
 
   private calculateImpactTrend(years: number[], citationsPerYear: Record<string, number>): 'increasing' | 'stable' | 'decreasing' {
-    const currentYear = new Date().getFullYear();
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const cutoffYear = now.getMonth() < 6 ? currentYear - 1 : currentYear;
     const lastThreeYears = years
-      .filter(year => year < currentYear - 1)
+      .filter(year => year < cutoffYear)
       .slice(-3);
 
     if (lastThreeYears.length < 2) return 'stable';
