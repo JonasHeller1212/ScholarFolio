@@ -225,6 +225,11 @@ function buildAuthorResult(data: any): Author {
     data.name
   );
 
+  // Propagate the citation graph source from the edge function response
+  if (data.metrics?.citationGraphSource) {
+    metrics.citationGraphSource = data.metrics.citationGraphSource;
+  }
+
   return {
     name: data.name,
     affiliation: data.affiliation || '',

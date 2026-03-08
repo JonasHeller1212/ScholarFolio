@@ -9,6 +9,7 @@ import type { TimeRange } from '../types/scholar';
 
 interface CitationsChartProps {
   citationsPerYear: Record<string, number>;
+  citationGraphSource?: 'cited_by_graph' | 'scraped_chart' | 'publication_year_sums';
 }
 
 function calculateCurrentYearProjection(currentYearCitations: number): number {
@@ -131,7 +132,8 @@ const CurrentYearGrowthLabel = (props: any) => {
   );
 };
 
-export function CitationsChart({ citationsPerYear }: CitationsChartProps) {
+export function CitationsChart({ citationsPerYear, citationGraphSource }: CitationsChartProps) {
+  const isPubYearSums = citationGraphSource === 'publication_year_sums';
   const [timeRange, setTimeRange] = useState<TimeRange>('5y');
 
   const chartData = useMemo(() => {
@@ -222,11 +224,23 @@ export function CitationsChart({ citationsPerYear }: CitationsChartProps) {
 
   return (
     <div className="space-y-4">
+      {isPubYearSums && (
+        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+          <Info className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium">Limited citation data</p>
+            <p className="text-amber-600 mt-0.5">
+              Google Scholar's citation-per-year graph was unavailable. Showing total citations grouped by publication year instead —
+              older years appear higher because their papers have had more time to accumulate citations. Growth rates may not reflect actual citation trends.
+            </p>
+          </div>
+        </div>
+      )}
       <div className="flex items-start justify-between">
         <div>
           <h4 className="text-sm font-medium text-gray-900 flex items-center">
             <Citation className="h-4 w-4 text-[#2d7d7d] mr-2" />
-            Citation Trends & Projections
+            {isPubYearSums ? 'Citations by Publication Year' : 'Citation Trends & Projections'}
           </h4>
           <div className="mt-2 grid grid-cols-3 gap-4">
             <div className="bg-[#eaf4f4] rounded-lg p-3">
