@@ -187,11 +187,15 @@ async function fetchViaDirectScraping(authorId: string) {
     throw new Error("Failed to parse any data from Scholar profile");
   }
 
-  // Parse citations-per-year graph from the profile page
-  // Google Scholar embeds this in the bar chart section (#gsc_rsb_cit)
+  // Parse citations-per-year graph from the profile page.
+  // The main chart lives in #gsc_rsb_cit; the modal uses .gsc_md_hist_b.
   const citationsPerYear: Record<string, number> = {};
-  const yearEls = doc.querySelectorAll('.gsc_md_hist_b .gsc_g_t');
-  const barEls = doc.querySelectorAll('.gsc_md_hist_b .gsc_g_al');
+  let yearEls = doc.querySelectorAll('#gsc_rsb_cit .gsc_g_t');
+  let barEls = doc.querySelectorAll('#gsc_rsb_cit .gsc_g_al');
+  if (!yearEls.length || yearEls.length !== barEls.length) {
+    yearEls = doc.querySelectorAll('.gsc_md_hist_b .gsc_g_t');
+    barEls = doc.querySelectorAll('.gsc_md_hist_b .gsc_g_al');
+  }
   if (yearEls.length > 0 && yearEls.length === barEls.length) {
     for (let i = 0; i < yearEls.length; i++) {
       const year = yearEls[i]?.textContent?.trim();
