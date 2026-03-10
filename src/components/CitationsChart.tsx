@@ -12,7 +12,7 @@ import type { Publication } from '../types/scholar';
 
 interface CitationsChartProps {
   citationsPerYear: Record<string, number>;
-  citationGraphSource?: 'cited_by_graph' | 'scraped_chart' | 'publication_year_sums';
+  citationGraphSource?: 'cited_by_graph' | 'scraped_chart';
   publications?: Publication[];
 }
 
@@ -77,8 +77,22 @@ const CurrentYearGrowthLabel = (props: any) => {
 const tooltipStyle = "bg-white/95 backdrop-blur-sm shadow-lg border border-gray-100 rounded-lg p-3 text-xs";
 
 export function CitationsChart({ citationsPerYear, citationGraphSource, publications = [] }: CitationsChartProps) {
-  const isPubYearSums = citationGraphSource === 'publication_year_sums';
   const [timeRange, setTimeRange] = useState<TimeRange>('5y');
+
+  // If no real citation graph data is available, show a message
+  if (!citationsPerYear || Object.keys(citationsPerYear).length === 0) {
+    return (
+      <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+        <Info className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="font-medium">Citation graph unavailable</p>
+          <p className="text-amber-600 mt-0.5">
+            Google Scholar's citation-per-year data could not be retrieved. Try reloading to fetch fresh data.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // --- Bar chart data (citations per year + projections) ---
   const chartData = useMemo(() => {
@@ -252,19 +266,6 @@ export function CitationsChart({ citationsPerYear, citationGraphSource, publicat
 
   return (
     <div className="space-y-6">
-      {isPubYearSums && (
-        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
-          <Info className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-medium">Limited citation data</p>
-            <p className="text-amber-600 mt-0.5">
-              Google Scholar's citation-per-year graph was unavailable. Showing total citations grouped by publication year instead.
-              Growth rates may not reflect actual trends.
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Summary stat cards + time range */}
       <div className="flex items-start justify-between">
         <div className="grid grid-cols-4 gap-3 flex-1 mr-4">
@@ -312,7 +313,7 @@ export function CitationsChart({ citationsPerYear, citationGraphSource, publicat
       <div className="bg-white border border-gray-100 rounded-xl p-4">
         <h4 className="text-sm font-medium text-gray-900 flex items-center mb-3">
           <BarChart3 className="h-4 w-4 text-[#2d7d7d] mr-2" />
-          {isPubYearSums ? 'Citations by Publication Year' : 'Annual Citations & Year-over-Year Growth'}
+          Annual Citations & Year-over-Year Growth
         </h4>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">

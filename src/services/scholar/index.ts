@@ -174,8 +174,10 @@ async function fetchViaClientScraping(normalizedUrl: string) {
   // The main profile page renders the chart inside #gsc_rsb_cit with
   // .gsc_g_t for year labels and .gsc_g_al for bar values.
   // The modal (if present) uses .gsc_md_hist_b as a wrapper.
+  // Extract actual citations-per-year from the Google Scholar bar chart.
+  // Never fall back to publication-year sums — that's a different metric.
   const citationsPerYear: Record<string, number> = {};
-  let citationGraphSource: 'scraped_chart' | 'publication_year_sums' | undefined;
+  let citationGraphSource: 'scraped_chart' | undefined;
 
   // Try the main profile chart first, then fall back to modal chart
   let yearEls = doc.querySelectorAll('#gsc_rsb_cit .gsc_g_t');
@@ -193,20 +195,6 @@ async function fetchViaClientScraping(normalizedUrl: string) {
       }
     }
     citationGraphSource = 'scraped_chart';
-  }
-
-  // Fallback: derive from publications if chart data not available.
-  // NOTE: This groups citations by *publication year*, NOT by year the citation
-  // was received. This is fundamentally different from the GScholar bar chart
-  // and should be clearly labeled as such in the UI.
-  if (Object.keys(citationsPerYear).length === 0) {
-    publications.forEach(pub => {
-      if (pub.year) {
-        const y = String(pub.year);
-        citationsPerYear[y] = (citationsPerYear[y] || 0) + pub.citations;
-      }
-    });
-    citationGraphSource = 'publication_year_sums';
   }
 
   const citations = publications.map(p => p.citations).sort((a, b) => b - a);
