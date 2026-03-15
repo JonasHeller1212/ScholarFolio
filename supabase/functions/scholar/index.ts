@@ -20,7 +20,7 @@ function getCorsHeaders(req: Request) {
 // In-flight request coalescing to prevent duplicate API calls
 const inflightRequests = new Map<string, Promise<any>>();
 
-const CACHE_DURATION = 86400; // 24 hours in seconds
+const CACHE_DURATION = 259200; // 72 hours (3 days) in seconds
 const SERPAPI_KEY = Deno.env.get('SERPAPI_KEY') ?? '';
 
 const supabase = createClient(
@@ -538,6 +538,31 @@ function findTopCoAuthor(publications, authorName) {
   return topCoAuthor;
 }
 
+async function logRequest(
+  req: Request,
+  authorId: string,
+  source: 'serpapi' | 'scraper' | 'cache'
+) {
+  try {
+    const ip =
+      req.headers.get('x-forwarded-for') ||
+      req.headers.get('x-real-ip') ||
+      'unknown';
+    const origin = req.headers.get('Origin') || null;
+    const userAgent = req.headers.get('User-Agent') || null;
+
+    await supabase.from('request_logs').insert({
+      author_id: authorId,
+      source,
+      ip,
+      origin,
+      user_agent: userAgent,
+    });
+  } catch (e) {
+    console.error('[logRequest] Failed to log request:', e);
+  }
+}
+
 function extractScholarUserId(url) {
   try {
     const urlObj = new URL(url);
@@ -752,6 +777,7 @@ Deno.serve(async (req) => {
 
       if (hasCitationGraph && !likelyTruncated) {
         console.log("Cache hit for:", normalizedUrl);
+        logRequest(req, authorId, 'cache');
         return new Response(
           JSON.stringify(cached.data),
           {
@@ -799,6 +825,8 @@ Deno.serve(async (req) => {
     } else {
       console.log("Successfully cached data for:", normalizedUrl);
     }
+
+    logRequest(req, authorId, data._source === 'scraper' ? 'scraper' : 'serpapi');
 
     return new Response(
       JSON.stringify(data),
