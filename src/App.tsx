@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { Linkedin, Github, ExternalLink } from 'lucide-react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Linkedin, Github, ExternalLink, Coins } from 'lucide-react';
 import { LandingPage } from './components/LandingPage';
 import { ApiError } from './utils/api';
 import { ErrorModal } from './components/ErrorModal';
@@ -8,6 +8,9 @@ import { AboutPage } from './components/AboutPage';
 import { TermsPage } from './components/TermsPage';
 import { PrivacyPage } from './components/PrivacyPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { AuthButton } from './components/AuthButton';
+import { CreditPacks } from './components/CreditPacks';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import type { Author } from './types/scholar';
 import { scholarService } from './services/scholar';
 
@@ -94,18 +97,52 @@ function Footer({ onNavigate }: { onNavigate: (page: Page) => void }) {
   );
 }
 
-function App() {
+function AppContent() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Author | null>(null);
   const [profileUrl, setProfileUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showError, setShowError] = useState(false);
+  const [showCreditPacks, setShowCreditPacks] = useState(false);
   const [page, setPage] = useState<Page>('home');
   const requestInProgressRef = useRef(false);
+  const { user, credits, refreshCredits } = useAuth();
+
+  // Handle payment success redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') === 'success') {
+      refreshCredits();
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [refreshCredits]);
+
+  // Anonymous usage tracking via localStorage
+  const getAnonSearches = () => parseInt(localStorage.getItem('sf_searches') || '0');
+  const incrementAnonSearches = () => {
+    const count = getAnonSearches() + 1;
+    localStorage.setItem('sf_searches', String(count));
+    return count;
+  };
+  const ANON_FREE_LIMIT = 3;
 
   const handleSearch = useCallback(async (url: string) => {
     // Prevent multiple concurrent requests using ref to avoid stale closure
     if (requestInProgressRef.current) {
+      return;
+    }
+
+    // Credit/usage checks
+    if (!user) {
+      // Anonymous user — check local free limit
+      if (getAnonSearches() >= ANON_FREE_LIMIT) {
+        setError('You\'ve used your 3 free searches. Sign up for 5 more — free, no credit card needed.');
+        setShowError(true);
+        return;
+      }
+    } else if (credits !== null && credits <= 0) {
+      setShowCreditPacks(true);
       return;
     }
 
@@ -127,6 +164,13 @@ function App() {
         setError('Failed to fetch profile data. Please try again.');
         setShowError(true);
         return;
+      }
+
+      // Track usage
+      if (!user) {
+        incrementAnonSearches();
+      } else {
+        refreshCredits();
       }
 
       // Ensure metrics exists with default values even if undefined
@@ -155,7 +199,7 @@ function App() {
       requestInProgressRef.current = false;
       setLoading(false);
     }
-  }, []);
+  }, [user, credits, refreshCredits]);
 
   const handleReset = useCallback(() => {
     setData(null);
@@ -195,16 +239,45 @@ function App() {
   };
 
   return (
-    <ErrorBoundary>
-      <div className="min-h-screen flex flex-col">
-        <div className="flex-1">
-          {renderPage()}
-        </div>
-        {!(data && !error) && <Footer onNavigate={handleNavigate} />}
-        {showError && error && (
-          <ErrorModal message={error} onClose={handleReset} />
+    <div className="min-h-screen flex flex-col">
+      {/* Auth header bar */}
+      <div className="fixed top-0 right-0 z-40 p-3 flex items-center gap-2">
+        {!user && getAnonSearches() > 0 && (
+          <span className="text-[10px] text-gray-400">
+            {Math.max(0, ANON_FREE_LIMIT - getAnonSearches())}/{ANON_FREE_LIMIT} free searches
+          </span>
         )}
+        {user && credits !== null && credits <= 2 && credits > 0 && (
+          <button
+            onClick={() => setShowCreditPacks(true)}
+            className="flex items-center gap-1 px-2 py-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md hover:bg-amber-100 transition-colors"
+          >
+            <Coins className="h-3 w-3" />
+            {credits} left
+          </button>
+        )}
+        <AuthButton />
       </div>
+      <div className="flex-1">
+        {renderPage()}
+      </div>
+      {!(data && !error) && <Footer onNavigate={handleNavigate} />}
+      {showError && error && (
+        <ErrorModal message={error} onClose={handleReset} />
+      )}
+      {showCreditPacks && (
+        <CreditPacks onClose={() => setShowCreditPacks(false)} />
+      )}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </ErrorBoundary>
   );
 }
