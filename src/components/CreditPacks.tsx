@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Zap, Star, X, Shield, Clock, TrendingUp, Check, Sparkles } from 'lucide-react';
 import { useAuth, supabase } from '../contexts/AuthContext';
+import { trackEvent } from '../utils/analytics';
 
 const PACKS = [
   {
@@ -64,6 +65,7 @@ export function CreditPacks({ onClose }: { onClose: () => void }) {
       }
 
       if (data.url) {
+        trackEvent('checkout_started', { pack: packId });
         window.open(data.url, '_blank');
       }
     } catch (err) {

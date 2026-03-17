@@ -4,6 +4,7 @@ import { SearchBar } from './SearchBar';
 import { ScholarSearchModal } from './ScholarSearchModal';
 import { Logo } from './Logo';
 import { useAuth } from '../contexts/AuthContext';
+import { trackEvent } from '../utils/analytics';
 
 interface LandingPageProps {
   onSearch: (url: string) => void;
@@ -53,6 +54,10 @@ export function LandingPage({ onSearch, loading, error, onNavigate, authControls
   const featuresRef = useScrollReveal();
   const ctaRef = useScrollReveal();
   const { user } = useAuth();
+
+  useEffect(() => {
+    trackEvent('page_view', { page: 'landing' });
+  }, []);
 
   return (
     <main className="flex-1 mesh-bg">

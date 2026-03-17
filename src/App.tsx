@@ -15,6 +15,7 @@ import { SignUpWall } from './components/SignUpWall';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import type { Author } from './types/scholar';
 import { scholarService } from './services/scholar';
+import { trackEvent } from './utils/analytics';
 
 const SOCIAL_LINKS = {
   linkedin: 'https://www.linkedin.com/in/hellerjonas/',
@@ -115,6 +116,7 @@ function AppContent() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('payment') === 'success') {
+      trackEvent('purchase_completed');
       refreshCredits();
       // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
@@ -140,10 +142,12 @@ function AppContent() {
     if (!user) {
       // Anonymous user — check local free limit
       if (getAnonSearches() >= ANON_FREE_LIMIT) {
+        trackEvent('signup_wall_shown');
         setShowSignUpWall(true);
         return;
       }
     } else if (credits !== null && credits <= 0) {
+      trackEvent('paywall_shown');
       setShowCreditPacks(true);
       return;
     }
@@ -171,8 +175,10 @@ function AppContent() {
       // Track usage
       if (!user) {
         incrementAnonSearches();
+        trackEvent('search_anonymous', { search_number: getAnonSearches() });
       } else {
         refreshCredits();
+        trackEvent('search_authenticated');
       }
 
       // Ensure metrics exists with default values even if undefined
@@ -220,7 +226,7 @@ function AppContent() {
 
   const authControls = (
     <AuthHeaderControls
-      onBuyCredits={() => setShowCreditPacks(true)}
+      onBuyCredits={() => { trackEvent('credit_packs_opened', { source: 'header' }); setShowCreditPacks(true); }}
       anonSearchesUsed={getAnonSearches()}
       anonFreeLimit={ANON_FREE_LIMIT}
     />

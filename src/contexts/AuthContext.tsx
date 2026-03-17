@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, User, Session } from '@supabase/supabase-js';
+import { trackEvent } from '../utils/analytics';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const now = Date.now();
             // If account was created within the last 30 seconds, it's a new sign-up
             if (now - createdAt < 30000 && session.user.app_metadata?.provider === 'google') {
+              trackEvent('signup_completed', { method: 'google' });
               setShowWelcome(true);
             }
           }
