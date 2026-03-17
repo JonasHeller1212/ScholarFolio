@@ -2,7 +2,7 @@
 
 **Your research, at a glance.**
 
-[Live App](https://scholarfolio.netlify.app/) | [LinkedIn](https://www.linkedin.com/in/hellerjonas/) | [Report an Issue](https://github.com/JonasHeller1212/ResearchFolio/issues)
+[Live App](https://scholarfolio.org/) | [LinkedIn](https://www.linkedin.com/in/hellerjonas/) | [Report an Issue](https://github.com/JonasHeller1212/ResearchFolio/issues)
 
 Scholar Folio turns a Google Scholar profile URL into a clean, single-page research portfolio. It surfaces your publication history, collaboration network, citation trends, and key impact metrics — without requiring manual data entry.
 

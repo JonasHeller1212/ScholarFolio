@@ -2,6 +2,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.39.3";
 import Stripe from "npm:stripe@14.14.0";
 
 const ALLOWED_ORIGINS = [
+  'https://scholarfolio.org',
+  'https://www.scholarfolio.org',
   'https://scholarfolio.netlify.app',
   'http://localhost:5173',
   'http://localhost:3000'
