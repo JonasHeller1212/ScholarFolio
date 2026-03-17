@@ -66,7 +66,7 @@ export function CreditPacks({ onClose }: { onClose: () => void }) {
 
       if (data.url) {
         trackEvent('checkout_started', { pack: packId });
-        window.open(data.url, '_blank');
+        window.location.href = data.url;
       }
     } catch (err) {
       setError('Failed to create checkout session. Please try again.');
