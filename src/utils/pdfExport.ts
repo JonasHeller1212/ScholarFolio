@@ -196,10 +196,13 @@ export function exportProfilePdf(data: Author) {
   metricCard('Citation Gini', String(m.citationGini), m.citationGini >= 0.7 ? 'Concentrated' : m.citationGini >= 0.4 ? 'Moderate' : 'Spread evenly');
   metricCard('Citations/Career Yr', String(m.ageNormalizedRate), 'Age-normalized rate');
 
-  y += 4;
-  drawDivider();
+  // === PAGE 2: COLLABORATION ===
+  doc.addPage();
+  y = M;
+  setFill(TEAL);
+  doc.rect(0, 0, PAGE_W, 3, 'F');
+  y = 12;
 
-  // === COLLABORATION ===
   sectionTitle('Collaboration Metrics');
 
   startCardGrid();
@@ -211,10 +214,7 @@ export function exportProfilePdf(data: Author) {
     metricCard('Top Co-author', extractLastName(m.topCoAuthor), `${m.topCoAuthorPapers} papers`);
   }
 
-  y += 4;
-  drawDivider();
-
-  // === PAGE 2: CITATION TRENDS ===
+  // === PAGE 3: CITATION TRENDS ===
   doc.addPage();
   y = M;
 
@@ -372,11 +372,15 @@ export function exportProfilePdf(data: Author) {
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(150, 150, 150);
-    doc.text(
-      `Data sourced from Google Scholar on ${timestamp}. ScholarFolio — scholarfolio.org`,
-      M,
-      PAGE_H - 6,
-    );
+    const footerText = `Data sourced from Google Scholar on ${timestamp}.`;
+    doc.text(footerText, M, PAGE_H - 6);
+
+    // Clickable ScholarFolio link
+    const linkX = M + doc.getTextWidth(footerText) + 2;
+    doc.setTextColor(TEAL[0], TEAL[1], TEAL[2]);
+    doc.textWithLink('ScholarFolio — scholarfolio.org', linkX, PAGE_H - 6, { url: 'https://scholarfolio.org' });
+
+    doc.setTextColor(150, 150, 150);
     doc.text(`Page ${i} of ${totalPages}`, PAGE_W - M, PAGE_H - 6, { align: 'right' });
   }
 
