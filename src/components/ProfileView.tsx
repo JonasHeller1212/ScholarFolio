@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, ArrowLeft, BookOpen, Users, LineChart, Network, BarChart as ChartBar, User, Share2, Check } from 'lucide-react';
+import { Search, ArrowLeft, BookOpen, Users, LineChart, Network, BarChart as ChartBar, User, Share2, Check, Code } from 'lucide-react';
+import { EmbedModal } from './EmbedModal';
 import { SearchBar } from './SearchBar';
 import { TopicsList } from './TopicsList';
 import { PublicationsList } from './PublicationsList';
@@ -45,6 +46,12 @@ export function ProfileView({
   const [activeTab, setActiveTab] = useState<TabId>('metrics');
   const [imgError, setImgError] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showEmbed, setShowEmbed] = useState(false);
+
+  // Extract scholar ID from URL params or profileUrl
+  const scholarId = new URLSearchParams(window.location.search).get('user')
+    || (profileUrl ? new URL(profileUrl).searchParams.get('user') : null)
+    || '';
 
   const handleShare = () => {
     const url = window.location.href;
@@ -127,13 +134,24 @@ export function ProfileView({
                   )}
                 </h2>
                 <p className="text-sm text-gray-500 mb-2">{data.affiliation}</p>
-                <button
-                  onClick={handleShare}
-                  className="inline-flex items-center gap-1.5 text-xs text-[#2d7d7d] hover:text-[#1a5c5c] bg-[#eaf4f4] hover:bg-[#d5ecec] px-2.5 py-1 rounded-full transition-colors"
-                >
-                  {copied ? <Check className="h-3 w-3" /> : <Share2 className="h-3 w-3" />}
-                  {copied ? 'Link copied!' : 'Share profile'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleShare}
+                    className="inline-flex items-center gap-1.5 text-xs text-[#2d7d7d] hover:text-[#1a5c5c] bg-[#eaf4f4] hover:bg-[#d5ecec] px-2.5 py-1 rounded-full transition-colors"
+                  >
+                    {copied ? <Check className="h-3 w-3" /> : <Share2 className="h-3 w-3" />}
+                    {copied ? 'Link copied!' : 'Share profile'}
+                  </button>
+                  {scholarId && (
+                    <button
+                      onClick={() => setShowEmbed(true)}
+                      className="inline-flex items-center gap-1.5 text-xs text-[#2d7d7d] hover:text-[#1a5c5c] bg-[#eaf4f4] hover:bg-[#d5ecec] px-2.5 py-1 rounded-full transition-colors"
+                    >
+                      <Code className="h-3 w-3" />
+                      Embed
+                    </button>
+                  )}
+                </div>
                 {data.topics && data.topics.length > 0 && (
                   <TopicsList topics={data.topics} />
                 )}
@@ -256,6 +274,14 @@ export function ProfileView({
           <PublicationsList publications={data.publications} />
         )}
       </main>
+
+      {scholarId && (
+        <EmbedModal
+          isOpen={showEmbed}
+          onClose={() => setShowEmbed(false)}
+          scholarId={scholarId}
+        />
+      )}
     </div>
   );
 }
