@@ -32,7 +32,8 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const userEmail = user?.email || user?.user_metadata?.email || '';
+  const isAdmin = userEmail === ADMIN_EMAIL;
 
   useEffect(() => {
     if (!isAdmin) {
