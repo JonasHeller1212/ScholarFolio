@@ -15,7 +15,6 @@ import { SignUpWall } from './components/SignUpWall';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import type { Author } from './types/scholar';
 import { scholarService } from './services/scholar';
-import { trackEvent } from './utils/analytics';
 
 const SOCIAL_LINKS = {
   linkedin: 'https://www.linkedin.com/in/hellerjonas/',
@@ -116,25 +115,11 @@ function AppContent() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('payment') === 'success') {
-      trackEvent('purchase_completed');
       refreshCredits();
       // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [refreshCredits]);
-
-  // Handle shareable profile URL (?user=AUTHOR_ID)
-  const initialLoadRef = useRef(false);
-  useEffect(() => {
-    if (initialLoadRef.current) return;
-    const params = new URLSearchParams(window.location.search);
-    const userId = params.get('user');
-    if (userId && userId.length >= 12) {
-      initialLoadRef.current = true;
-      const scholarUrl = `https://scholar.google.com/citations?user=${encodeURIComponent(userId)}`;
-      handleSearch(scholarUrl);
-    }
-  }, [handleSearch]);
 
   // Anonymous usage tracking via localStorage
   const getAnonSearches = () => parseInt(localStorage.getItem('sf_searches') || '0');
@@ -155,12 +140,10 @@ function AppContent() {
     if (!user) {
       // Anonymous user — check local free limit
       if (getAnonSearches() >= ANON_FREE_LIMIT) {
-        trackEvent('signup_wall_shown');
         setShowSignUpWall(true);
         return;
       }
     } else if (credits !== null && credits <= 0) {
-      trackEvent('paywall_shown');
       setShowCreditPacks(true);
       return;
     }
@@ -188,10 +171,8 @@ function AppContent() {
       // Track usage
       if (!user) {
         incrementAnonSearches();
-        trackEvent('search_anonymous', { search_number: getAnonSearches() });
       } else {
         refreshCredits();
-        trackEvent('search_authenticated');
       }
 
       // Ensure metrics exists with default values even if undefined
@@ -202,11 +183,6 @@ function AppContent() {
 
       setProfileUrl(url);
       setData(sanitizedData);
-
-      // Update browser URL with shareable link
-      if (userId) {
-        window.history.replaceState({}, '', `?user=${encodeURIComponent(userId)}`);
-      }
     } catch (err) {
       let errorMessage: string;
 
@@ -235,7 +211,6 @@ function AppContent() {
     requestInProgressRef.current = false;
     setShowError(false);
     setPage('home');
-    window.history.replaceState({}, '', window.location.pathname);
   }, []);
 
   const handleNavigate = useCallback((newPage: Page) => {
@@ -245,7 +220,7 @@ function AppContent() {
 
   const authControls = (
     <AuthHeaderControls
-      onBuyCredits={() => { trackEvent('credit_packs_opened', { source: 'header' }); setShowCreditPacks(true); }}
+      onBuyCredits={() => setShowCreditPacks(true)}
       anonSearchesUsed={getAnonSearches()}
       anonFreeLimit={ANON_FREE_LIMIT}
     />

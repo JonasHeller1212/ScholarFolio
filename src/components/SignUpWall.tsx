@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X, User, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { trackEvent } from '../utils/analytics';
 
 interface SignUpWallProps {
   onClose: () => void;
@@ -34,7 +33,6 @@ export function SignUpWall({ onClose }: SignUpWallProps) {
         if (error) {
           setError(error);
         } else {
-          trackEvent('signup_completed', { method: 'email' });
           setConfirmSent(true);
         }
       } else {

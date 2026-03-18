@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { Zap, Star, X, Shield, Clock, TrendingUp, Check, Sparkles } from 'lucide-react';
 import { useAuth, supabase } from '../contexts/AuthContext';
-import { trackEvent } from '../utils/analytics';
 
 const PACKS = [
   {
     id: 'starter',
     name: 'Starter',
-    credits: 20,
+    credits: 15,
     price: 500,
     label: '5.00',
-    perSearch: '0.25',
+    perSearch: '0.33',
     features: [
-      '20 profile analyses',
+      '15 profile analyses',
       'Full citation metrics',
       'Co-author network mapping',
     ],
@@ -20,14 +19,14 @@ const PACKS = [
   {
     id: 'pro',
     name: 'Pro',
-    credits: 50,
+    credits: 40,
     price: 1000,
     label: '10.00',
-    perSearch: '0.20',
+    perSearch: '0.25',
     popular: true,
-    savings: '20',
+    savings: '25',
     features: [
-      '50 profile analyses',
+      '40 profile analyses',
       'Full citation metrics',
       'Co-author network mapping',
       'Priority support',
@@ -65,8 +64,7 @@ export function CreditPacks({ onClose }: { onClose: () => void }) {
       }
 
       if (data.url) {
-        trackEvent('checkout_started', { pack: packId });
-        window.location.href = data.url;
+        window.open(data.url, '_blank');
       }
     } catch (err) {
       setError('Failed to create checkout session. Please try again.');
