@@ -156,7 +156,7 @@ export function ProfileView({
                   <button
                     onClick={() => {
                       if (!data) return;
-                      exportProfilePdf(data);
+                      exportProfilePdf(data, scholarId || undefined);
                     }}
                     className="inline-flex items-center gap-1.5 text-xs text-[#2d7d7d] hover:text-[#1a5c5c] bg-[#eaf4f4] hover:bg-[#d5ecec] px-2.5 py-1 rounded-full transition-colors"
                   >

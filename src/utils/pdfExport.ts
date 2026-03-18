@@ -12,7 +12,7 @@ const DARK = [30, 41, 59] as const; // #1e293b
 const GRAY = [100, 116, 139] as const; // #64748b
 const LIGHT_GRAY = [203, 213, 225] as const;
 
-export function exportProfilePdf(data: Author) {
+export function exportProfilePdf(data: Author, scholarId?: string) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   let y = M;
 
@@ -118,7 +118,20 @@ export function exportProfilePdf(data: Author) {
   doc.setFont('helvetica', 'normal');
   setColor(GRAY);
   doc.text(data.affiliation || '', M, y);
-  y += 8;
+  y += 6;
+
+  // Link to profile on ScholarFolio
+  if (scholarId) {
+    const profileUrl = `https://scholarfolio.org/?user=${encodeURIComponent(scholarId)}`;
+    setFill([234, 244, 244]); // #eaf4f4
+    const linkText = 'View live profile on ScholarFolio';
+    doc.setFontSize(8);
+    const linkW = doc.getTextWidth(linkText) + 8;
+    doc.roundedRect(M, y - 3, linkW, 5.5, 1.5, 1.5, 'F');
+    setColor(TEAL);
+    doc.textWithLink(linkText, M + 4, y, { url: profileUrl });
+    y += 6;
+  }
 
   // Key stats boxes
   const stats = [
