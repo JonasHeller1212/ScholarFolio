@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Zap, Star, X, Shield, Clock, TrendingUp, Check, Sparkles } from 'lucide-react';
-import { useAuth, supabase } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 const PACKS = [
   {

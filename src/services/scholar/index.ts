@@ -5,7 +5,7 @@ import { ApiError } from '../../utils/api';
 import { normalizeAuthorNames } from '../../utils/names';
 import { scholarFetcher } from './fetcher';
 import { scholarParser } from './parser';
-import { supabase } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 export interface AuthorSearchResult {
   name: string;
