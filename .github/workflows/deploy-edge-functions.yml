@@ -17,6 +17,9 @@ jobs:
           version: latest
 
       - name: Deploy edge functions
-        run: supabase functions deploy scholar --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          supabase functions deploy scholar --no-verify-jwt --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+          supabase functions deploy create-checkout --no-verify-jwt --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+          supabase functions deploy stripe-webhook --no-verify-jwt --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
