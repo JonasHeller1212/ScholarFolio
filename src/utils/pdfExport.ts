@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import type { Author } from '../types/scholar';
 import { extractLastName } from './names';
+import { generateNarrativeParagraphs } from '../components/ResearcherNarrative';
 
 const PAGE_W = 210;
 const PAGE_H = 297;
@@ -42,22 +43,60 @@ export function exportProfilePdf(data: Author) {
     setColor(DARK);
   };
 
-  const metricRow = (label: string, value: string, subtitle?: string) => {
-    ensureSpace(6);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    setColor(GRAY);
-    doc.text(label, M + 2, y);
-    doc.setFont('helvetica', 'bold');
-    setColor(DARK);
-    doc.text(String(value), M + 65, y);
-    if (subtitle) {
-      doc.setFont('helvetica', 'normal');
-      setColor(GRAY);
-      doc.setFontSize(7.5);
-      doc.text(subtitle, M + 65 + doc.getTextWidth(String(value)) + 3, y);
+  // Metric card grid — mimics the website's card layout
+  const CARD_W = (CW - 8) / 3; // 3 columns with gaps
+  const CARD_H = 18;
+  const CARD_GAP = 4;
+  const CARD_BG = [248, 250, 252] as const; // #f8fafc
+  const CARD_BORDER = [226, 232, 240] as const; // #e2e8f0
+
+  let cardCol = 0;
+  let cardRowY = 0;
+
+  const startCardGrid = () => {
+    cardCol = 0;
+    cardRowY = y;
+  };
+
+  const metricCard = (label: string, value: string, subtitle?: string) => {
+    if (cardCol >= 3) {
+      cardCol = 0;
+      cardRowY += CARD_H + CARD_GAP;
     }
-    y += 5;
+    if (cardCol === 0) {
+      ensureSpace(CARD_H + CARD_GAP + 2);
+      if (cardRowY < y) cardRowY = y;
+    }
+
+    const cx = M + cardCol * (CARD_W + CARD_GAP);
+    const cy = cardRowY;
+
+    // Card background
+    setFill(CARD_BG);
+    doc.setDrawColor(CARD_BORDER[0], CARD_BORDER[1], CARD_BORDER[2]);
+    doc.roundedRect(cx, cy, CARD_W, CARD_H, 1.5, 1.5, 'FD');
+
+    // Value (large, bold, teal)
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    setColor(TEAL);
+    doc.text(String(value), cx + 3, cy + 7);
+
+    // Label
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    setColor(DARK);
+    doc.text(label, cx + 3, cy + 12);
+
+    // Subtitle
+    if (subtitle) {
+      doc.setFontSize(5.5);
+      setColor(GRAY);
+      doc.text(subtitle, cx + 3, cy + 15.5);
+    }
+
+    cardCol++;
+    y = cardRowY + CARD_H + CARD_GAP;
   };
 
   // === HEADER ===
@@ -120,25 +159,42 @@ export function exportProfilePdf(data: Author) {
     y += topicLines.length * 3.5 + 4;
   }
 
+  // === RESEARCH PROFILE NARRATIVE ===
+  const narrativeParagraphs = generateNarrativeParagraphs(data);
+  if (narrativeParagraphs.length > 0) {
+    sectionTitle('Research Profile');
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    setColor(DARK);
+    for (const para of narrativeParagraphs) {
+      ensureSpace(12);
+      const lines = doc.splitTextToSize(para, CW);
+      doc.text(lines, M, y);
+      y += lines.length * 3.5 + 2;
+    }
+    y += 2;
+  }
+
   drawDivider();
 
   // === IMPACT METRICS ===
   sectionTitle('Impact Metrics');
 
   const m = data.metrics;
-  metricRow('Total Citations', data.totalCitations.toLocaleString());
-  metricRow('h-index', String(m.hIndex));
-  metricRow('g-index', String(m.gIndex));
-  metricRow('i10-index', String(m.i10Index), `${m.i10Index} papers with 10+ citations`);
-  metricRow('h5-index', String(m.h5Index), 'Last 5 years');
-  metricRow('Publications', String(m.totalPublications));
-  metricRow('Pubs Per Year', String(m.publicationsPerYear));
-  metricRow('Citations/Paper', String(m.avgCitationsPerPaper));
-  metricRow('Citations/Year', String(m.avgCitationsPerYear));
-  metricRow('Citation Growth', `${m.citationGrowthRate > 0 ? '+' : ''}${m.citationGrowthRate}%`, '3-year avg. growth rate');
-  metricRow('Citation Half-Life', `${m.citationHalfLife} yr${m.citationHalfLife !== 1 ? 's' : ''}`, 'Years to 50% of citations');
-  metricRow('Citation Gini', String(m.citationGini), m.citationGini >= 0.7 ? 'Concentrated' : m.citationGini >= 0.4 ? 'Moderate' : 'Spread evenly');
-  metricRow('Citations/Career Yr', String(m.ageNormalizedRate), 'Age-normalized rate');
+  startCardGrid();
+  metricCard('Total Citations', data.totalCitations.toLocaleString());
+  metricCard('h-index', String(m.hIndex));
+  metricCard('g-index', String(m.gIndex));
+  metricCard('i10-index', String(m.i10Index), `${m.i10Index} papers with 10+ cites`);
+  metricCard('h5-index', String(m.h5Index), 'Last 5 years');
+  metricCard('Publications', String(m.totalPublications));
+  metricCard('Pubs Per Year', String(m.publicationsPerYear));
+  metricCard('Citations/Paper', String(m.avgCitationsPerPaper));
+  metricCard('Citations/Year', String(m.avgCitationsPerYear));
+  metricCard('Citation Growth', `${m.citationGrowthRate > 0 ? '+' : ''}${m.citationGrowthRate}%`, '3-yr avg. growth rate');
+  metricCard('Citation Half-Life', `${m.citationHalfLife} yr${m.citationHalfLife !== 1 ? 's' : ''}`, 'Years to 50% of citations');
+  metricCard('Citation Gini', String(m.citationGini), m.citationGini >= 0.7 ? 'Concentrated' : m.citationGini >= 0.4 ? 'Moderate' : 'Spread evenly');
+  metricCard('Citations/Career Yr', String(m.ageNormalizedRate), 'Age-normalized rate');
 
   y += 4;
   drawDivider();
@@ -146,12 +202,13 @@ export function exportProfilePdf(data: Author) {
   // === COLLABORATION ===
   sectionTitle('Collaboration Metrics');
 
-  metricRow('Co-authors', String(m.totalCoAuthors));
-  metricRow('Avg Authors/Paper', String(m.averageAuthors));
-  metricRow('Solo Author Rate', `${m.soloAuthorScore}%`);
-  metricRow('Collaboration Rate', `${m.collaborationScore}%`);
+  startCardGrid();
+  metricCard('Co-authors', String(m.totalCoAuthors));
+  metricCard('Avg Authors/Paper', String(m.averageAuthors));
+  metricCard('Solo Author Rate', `${m.soloAuthorScore}%`);
+  metricCard('Collaboration Rate', `${m.collaborationScore}%`);
   if (m.topCoAuthor) {
-    metricRow('Top Co-author', extractLastName(m.topCoAuthor), `${m.topCoAuthorPapers} papers`);
+    metricCard('Top Co-author', extractLastName(m.topCoAuthor), `${m.topCoAuthorPapers} papers`);
   }
 
   y += 4;

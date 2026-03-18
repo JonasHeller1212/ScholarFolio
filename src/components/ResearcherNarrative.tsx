@@ -244,8 +244,7 @@ function inferResearchMethods(publications: Author['publications']): string[] {
   return detected.slice(0, 4); // Cap at 4 to keep the sentence readable
 }
 
-export function ResearcherNarrative({ data }: ResearcherNarrativeProps) {
-  const narrative = useMemo(() => {
+export function generateNarrativeParagraphs(data: Author): string[] {
     const { publications, metrics, topics, name, totalCitations } = data;
     const career = getCareerSpan(publications);
     const topVenues = getTopVenues(publications, 3);
@@ -432,7 +431,10 @@ export function ResearcherNarrative({ data }: ResearcherNarrativeProps) {
     }
 
     return paragraphs;
-  }, [data]);
+}
+
+export function ResearcherNarrative({ data }: ResearcherNarrativeProps) {
+  const narrative = useMemo(() => generateNarrativeParagraphs(data), [data]);
 
   return (
     <div>
