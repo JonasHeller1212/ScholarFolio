@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Search, ArrowLeft, BookOpen, Users, LineChart, Network, BarChart as ChartBar, User, Share2, Check, Code } from 'lucide-react';
+import { Search, ArrowLeft, BookOpen, Users, LineChart, Network, BarChart as ChartBar, User, Share2, Check, Code, Download } from 'lucide-react';
 import { EmbedModal } from './EmbedModal';
+import { exportProfilePdf } from '../utils/pdfExport';
 import { SearchBar } from './SearchBar';
 import { TopicsList } from './TopicsList';
 import { PublicationsList } from './PublicationsList';
@@ -151,6 +152,13 @@ export function ProfileView({
                       Embed
                     </button>
                   )}
+                  <button
+                    onClick={() => data && exportProfilePdf(data)}
+                    className="inline-flex items-center gap-1.5 text-xs text-[#2d7d7d] hover:text-[#1a5c5c] bg-[#eaf4f4] hover:bg-[#d5ecec] px-2.5 py-1 rounded-full transition-colors"
+                  >
+                    <Download className="h-3 w-3" />
+                    PDF
+                  </button>
                 </div>
                 {data.topics && data.topics.length > 0 && (
                   <TopicsList topics={data.topics} />
