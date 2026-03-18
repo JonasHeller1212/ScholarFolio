@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ArrowLeft, BookOpen, Users, LineChart, Network, BarChart as ChartBar, User } from 'lucide-react';
+import { Search, ArrowLeft, BookOpen, Users, LineChart, Network, BarChart as ChartBar, User, Share2, Check } from 'lucide-react';
 import { SearchBar } from './SearchBar';
 import { TopicsList } from './TopicsList';
 import { PublicationsList } from './PublicationsList';
@@ -44,6 +44,15 @@ export function ProfileView({
 }: ProfileViewProps) {
   const [activeTab, setActiveTab] = useState<TabId>('metrics');
   const [imgError, setImgError] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   if (!data) return null;
 
@@ -117,7 +126,14 @@ export function ProfileView({
                     data.name
                   )}
                 </h2>
-                <p className="text-sm text-gray-500 mb-3">{data.affiliation}</p>
+                <p className="text-sm text-gray-500 mb-2">{data.affiliation}</p>
+                <button
+                  onClick={handleShare}
+                  className="inline-flex items-center gap-1.5 text-xs text-[#2d7d7d] hover:text-[#1a5c5c] bg-[#eaf4f4] hover:bg-[#d5ecec] px-2.5 py-1 rounded-full transition-colors"
+                >
+                  {copied ? <Check className="h-3 w-3" /> : <Share2 className="h-3 w-3" />}
+                  {copied ? 'Link copied!' : 'Share profile'}
+                </button>
                 {data.topics && data.topics.length > 0 && (
                   <TopicsList topics={data.topics} />
                 )}
