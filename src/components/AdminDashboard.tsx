@@ -125,6 +125,7 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
       <main className="flex-1 mesh-bg min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500 text-sm">Not authorized</p>
+          <p className="text-gray-400 text-xs mt-1">{userEmail || 'not logged in'}</p>
           <button onClick={onBack} className="mt-4 text-sm text-[#2d7d7d] hover:underline">Go back</button>
         </div>
       </main>
