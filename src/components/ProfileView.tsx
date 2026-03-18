@@ -48,6 +48,8 @@ export function ProfileView({
   const [imgError, setImgError] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const profileRef = React.useRef<HTMLDivElement>(null);
 
   // Extract scholar ID from URL params or profileUrl
   const scholarId = new URLSearchParams(window.location.search).get('user')
@@ -65,7 +67,7 @@ export function ProfileView({
   if (!data) return null;
 
   return (
-    <div className="min-h-screen mesh-bg">
+    <div className="min-h-screen mesh-bg" ref={profileRef}>
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-lg border-b border-gray-100/80">
         <div className="max-w-7xl mx-auto px-4 py-2.5">
@@ -153,11 +155,20 @@ export function ProfileView({
                     </button>
                   )}
                   <button
-                    onClick={() => data && exportProfilePdf(data)}
-                    className="inline-flex items-center gap-1.5 text-xs text-[#2d7d7d] hover:text-[#1a5c5c] bg-[#eaf4f4] hover:bg-[#d5ecec] px-2.5 py-1 rounded-full transition-colors"
+                    onClick={async () => {
+                      if (!profileRef.current || !data) return;
+                      setExporting(true);
+                      try {
+                        await exportProfilePdf(profileRef.current, data.name);
+                      } finally {
+                        setExporting(false);
+                      }
+                    }}
+                    disabled={exporting}
+                    className="inline-flex items-center gap-1.5 text-xs text-[#2d7d7d] hover:text-[#1a5c5c] bg-[#eaf4f4] hover:bg-[#d5ecec] px-2.5 py-1 rounded-full transition-colors disabled:opacity-50"
                   >
                     <Download className="h-3 w-3" />
-                    PDF
+                    {exporting ? 'Exporting...' : 'PDF'}
                   </button>
                 </div>
                 {data.topics && data.topics.length > 0 && (
