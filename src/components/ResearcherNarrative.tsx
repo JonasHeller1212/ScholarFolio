@@ -286,12 +286,16 @@ export function ResearcherNarrative({ data }: ResearcherNarrativeProps) {
       careerParagraph += ' a researcher';
     }
     if (topicsText) {
-      careerParagraph += `, working in the areas of ${topicsText}`;
+      careerParagraph += `, working in the ${topicNames.length === 1 ? 'area' : 'areas'} of ${topicsText}`;
     }
     careerParagraph += '.';
 
     if (career.firstYear > 0) {
-      careerParagraph += ` Their publication record spans ${career.years} year${career.years !== 1 ? 's' : ''}, with the earliest indexed publication dating back to ${career.firstYear}.`;
+      if (career.years <= 2) {
+        careerParagraph += ` Their first indexed publication appeared in ${career.firstYear}.`;
+      } else {
+        careerParagraph += ` Their publication record spans ${career.years} years, from ${career.firstYear} to ${career.lastYear}.`;
+      }
     }
 
     // Infer research methods from publication titles
@@ -309,14 +313,21 @@ export function ResearcherNarrative({ data }: ResearcherNarrativeProps) {
     paragraphs.push(careerParagraph);
 
     // Impact paragraph
-    let impactParagraph = `Over the course of their career, they have published ${publications.length} work${publications.length !== 1 ? 's' : ''} and accumulated ${totalCitations.toLocaleString()} citations, yielding an h-index of ${metrics.hIndex}`;
-    if (metrics.i10Index > 0) {
-      impactParagraph += ` and an i10-index of ${metrics.i10Index}`;
-    }
-    impactParagraph += '.';
+    let impactParagraph = '';
+    if (totalCitations === 0 && publications.length <= 3) {
+      impactParagraph = `They have ${publications.length} indexed publication${publications.length !== 1 ? 's' : ''} and have not yet accumulated citations in Google Scholar.`;
+    } else if (totalCitations === 0) {
+      impactParagraph = `They have published ${publications.length} work${publications.length !== 1 ? 's' : ''} but have not yet accumulated citations in Google Scholar.`;
+    } else {
+      impactParagraph = `Over the course of their career, they have published ${publications.length} work${publications.length !== 1 ? 's' : ''} and accumulated ${totalCitations.toLocaleString()} citation${totalCitations !== 1 ? 's' : ''}, yielding an h-index of ${metrics.hIndex}`;
+      if (metrics.i10Index > 0) {
+        impactParagraph += ` and an i10-index of ${metrics.i10Index} (${metrics.i10Index} publication${metrics.i10Index !== 1 ? 's' : ''} with 10 or more citations)`;
+      }
+      impactParagraph += '.';
 
-    if (topPaper && topPaper.citations > 0) {
-      impactParagraph += ` Their most cited work, "${topPaper.title}", has received ${topPaper.citations.toLocaleString()} citation${topPaper.citations !== 1 ? 's' : ''}.`;
+      if (topPaper && topPaper.citations > 0) {
+        impactParagraph += ` Their most cited work, "${topPaper.title}", has received ${topPaper.citations.toLocaleString()} citation${topPaper.citations !== 1 ? 's' : ''}.`;
+      }
     }
     paragraphs.push(impactParagraph);
 
@@ -331,9 +342,11 @@ export function ResearcherNarrative({ data }: ResearcherNarrativeProps) {
     };
     trendParagraph += phaseDescriptions[phase] || '';
 
-    if (metrics.citationGrowthRate !== 0) {
+    if (Math.abs(metrics.citationGrowthRate) >= 2) {
       const growthDirection = metrics.citationGrowthRate > 0 ? 'growing' : 'declining';
       trendParagraph += ` Citations have been ${growthDirection} at an average rate of ${Math.abs(metrics.citationGrowthRate)}% per year over the last three complete years.`;
+    } else if (metrics.citationGrowthRate !== 0 && totalCitations > 0) {
+      trendParagraph += ' Citation rates have remained relatively stable in recent years.';
     }
     if (trendParagraph) paragraphs.push(trendParagraph);
 
@@ -380,17 +393,35 @@ export function ResearcherNarrative({ data }: ResearcherNarrativeProps) {
     // Collaboration paragraph
     let collabParagraph = '';
     if (metrics.collaborationScore > 0) {
-      collabParagraph = `Approximately ${metrics.collaborationScore}% of their publications are co-authored, with an average of ${metrics.averageAuthors} authors per paper across ${metrics.totalCoAuthors} unique co-author${metrics.totalCoAuthors !== 1 ? 's' : ''}.`;
-      if (metrics.topCoAuthor) {
-        collabParagraph += ` Their most frequent collaborator is ${metrics.topCoAuthor}, with whom they have published ${metrics.topCoAuthorPapers} paper${metrics.topCoAuthorPapers !== 1 ? 's' : ''}.`;
+      let collabPct: string;
+      if (metrics.collaborationScore === 100) {
+        collabPct = 'All';
+      } else if (metrics.collaborationScore >= 95) {
+        collabPct = 'Nearly all';
+      } else if (metrics.collaborationScore >= 75) {
+        collabPct = `The majority (${metrics.collaborationScore}%)`;
+      } else if (metrics.collaborationScore >= 50) {
+        collabPct = `About half (${metrics.collaborationScore}%)`;
+      } else if (metrics.collaborationScore >= 10) {
+        collabPct = `A smaller share (${metrics.collaborationScore}%)`;
+      } else {
+        collabPct = `A small fraction (${metrics.collaborationScore}%)`;
+      }
+      collabParagraph = `${collabPct} of their publications are co-authored, with an average of ${metrics.averageAuthors} authors per paper across ${metrics.totalCoAuthors} unique co-author${metrics.totalCoAuthors !== 1 ? 's' : ''}.`;
+      if (metrics.topCoAuthor && metrics.topCoAuthorPapers >= 2) {
+        collabParagraph += ` Their most frequent collaborator is ${metrics.topCoAuthor}, with whom they have published ${metrics.topCoAuthorPapers} papers.`;
       }
       paragraphs.push(collabParagraph);
+    } else if (publications.length > 0) {
+      paragraphs.push('All indexed publications are single-authored.');
     }
 
     // Venues paragraph
     if (topVenues.length > 0) {
-      const venueList = topVenues.map(v => `${v.name} (${v.count})`);
-      let venuesParagraph = `Their work has appeared in outlets including `;
+      const venueList = topVenues.map(v => `${v.name} (${v.count} publication${v.count !== 1 ? 's' : ''})`);
+      let venuesParagraph = topVenues.length === 1
+        ? 'Their most frequent publication outlet is '
+        : 'Their most frequent publication outlets include ';
       if (venueList.length === 1) {
         venuesParagraph += venueList[0];
       } else {
