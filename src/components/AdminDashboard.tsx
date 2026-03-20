@@ -1,36 +1,54 @@
-import React, { useEffect, useState } from 'react';
-import { ArrowLeft, BarChart3, Users, CreditCard, Search, TrendingUp } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { ArrowLeft, BarChart3, Users, CreditCard, Search, TrendingUp, UserPlus, Eye } from 'lucide-react';
 import { Logo } from './Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
 const ADMIN_EMAIL = 'jonasheller89@gmail.com';
 
+type Period = 'day' | 'week' | 'month' | 'all';
+
 interface AdminDashboardProps {
   onBack: () => void;
 }
 
-interface Stats {
-  searchesToday: number;
-  searchesAllTime: number;
-  bySources: Record<string, number>;
-  authedSearches: number;
-  anonSearches: number;
-  uniqueProfiles: number;
-  totalUsers: number;
-  signupsToday: number;
-  purchasingUsers: number;
-  totalRevenue: number;
-  totalCreditsSold: number;
+interface RawData {
+  searches: Array<{ id: string; source: string; created_at: string; user_id: string | null; author_id: string | null }>;
+  users: Array<{ user_id: string; credits_remaining: number; total_purchased: number; created_at: string }>;
   purchases: Array<{ pack: string; amount_cents: number; credits: number; created_at: string }>;
-  searchesByDay: Array<{ day: string; count: number }>;
+}
+
+function getPeriodStart(period: Period): Date | null {
+  if (period === 'all') return null;
+  const now = new Date();
+  if (period === 'day') return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (period === 'week') {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    d.setDate(d.getDate() - 6);
+    return d;
+  }
+  // month
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  d.setDate(d.getDate() - 29);
+  return d;
+}
+
+function inPeriod(dateStr: string, start: Date | null): boolean {
+  if (!start) return true;
+  return new Date(dateStr) >= start;
+}
+
+function formatDay(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export function AdminDashboard({ onBack }: AdminDashboardProps) {
   const { user } = useAuth();
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [rawData, setRawData] = useState<RawData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [period, setPeriod] = useState<Period>('week');
 
   const userEmail = user?.email || user?.user_metadata?.email || '';
   const isAdmin = userEmail === ADMIN_EMAIL;
@@ -41,13 +59,10 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
       return;
     }
 
-    async function fetchStats() {
+    async function fetchData() {
       try {
-        const today = new Date().toISOString().slice(0, 10);
-
-        // Fetch all data in parallel
         const [searchesRes, usersRes, purchasesRes] = await Promise.all([
-          supabase.from('request_logs').select('id,source,created_at,user_id,author_id').order('created_at', { ascending: false }).limit(1000),
+          supabase.from('request_logs').select('id,source,created_at,user_id,author_id').order('created_at', { ascending: false }).limit(5000),
           supabase.from('user_credits').select('user_id,credits_remaining,total_purchased,created_at'),
           supabase.from('credit_purchases').select('pack,amount_cents,credits,created_at').order('created_at', { ascending: false }),
         ]);
@@ -56,59 +71,10 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
         if (usersRes.error) throw usersRes.error;
         if (purchasesRes.error) throw purchasesRes.error;
 
-        const searches = searchesRes.data || [];
-        const users = usersRes.data || [];
-        const purchases = purchasesRes.data || [];
-
-        // Searches today
-        const todaySearches = searches.filter(s => s.created_at?.startsWith(today));
-
-        // By source
-        const bySources: Record<string, number> = {};
-        todaySearches.forEach(s => {
-          const src = s.source || 'unknown';
-          bySources[src] = (bySources[src] || 0) + 1;
-        });
-
-        // Auth vs anon
-        const authed = todaySearches.filter(s => s.user_id).length;
-
-        // Unique profiles today
-        const uniqueProfiles = new Set(todaySearches.map(s => s.author_id).filter(Boolean)).size;
-
-        // Searches by day
-        const dayMap: Record<string, number> = {};
-        searches.forEach(s => {
-          const day = s.created_at?.slice(0, 10) || '';
-          if (day) dayMap[day] = (dayMap[day] || 0) + 1;
-        });
-        const searchesByDay = Object.entries(dayMap)
-          .sort(([a], [b]) => b.localeCompare(a))
-          .slice(0, 14)
-          .map(([day, count]) => ({ day, count }));
-
-        // Users
-        const signupsToday = users.filter(u => u.created_at?.startsWith(today)).length;
-        const purchasingUsers = users.filter(u => (u.total_purchased || 0) > 0).length;
-
-        // Revenue
-        const totalRevenue = purchases.reduce((sum, p) => sum + (p.amount_cents || 0), 0) / 100;
-        const totalCreditsSold = purchases.reduce((sum, p) => sum + (p.credits || 0), 0);
-
-        setStats({
-          searchesToday: todaySearches.length,
-          searchesAllTime: searches.length,
-          bySources,
-          authedSearches: authed,
-          anonSearches: todaySearches.length - authed,
-          uniqueProfiles,
-          totalUsers: users.length,
-          signupsToday,
-          purchasingUsers,
-          totalRevenue,
-          totalCreditsSold,
-          purchases,
-          searchesByDay,
+        setRawData({
+          searches: searchesRes.data || [],
+          users: usersRes.data || [],
+          purchases: purchasesRes.data || [],
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load stats');
@@ -117,8 +83,58 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
       }
     }
 
-    fetchStats();
+    fetchData();
   }, [isAdmin]);
+
+  const stats = useMemo(() => {
+    if (!rawData) return null;
+
+    const start = getPeriodStart(period);
+    const searches = rawData.searches.filter(s => s.created_at && inPeriod(s.created_at, start));
+    const purchases = rawData.purchases.filter(p => p.created_at && inPeriod(p.created_at, start));
+    const newUsers = rawData.users.filter(u => u.created_at && inPeriod(u.created_at, start));
+
+    // By source
+    const bySources: Record<string, number> = {};
+    searches.forEach(s => {
+      const src = s.source || 'unknown';
+      bySources[src] = (bySources[src] || 0) + 1;
+    });
+
+    // Auth vs anon
+    const authedSearches = searches.filter(s => s.user_id).length;
+    const uniqueProfiles = new Set(searches.map(s => s.author_id).filter(Boolean)).size;
+
+    // Searches by day
+    const dayMap: Record<string, number> = {};
+    searches.forEach(s => {
+      const day = s.created_at?.slice(0, 10) || '';
+      if (day) dayMap[day] = (dayMap[day] || 0) + 1;
+    });
+    const searchesByDay = Object.entries(dayMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([day, count]) => ({ day, count }));
+
+    // Revenue
+    const revenue = purchases.reduce((sum, p) => sum + (p.amount_cents || 0), 0) / 100;
+    const creditsSold = purchases.reduce((sum, p) => sum + (p.credits || 0), 0);
+
+    return {
+      searches: searches.length,
+      searchesAllTime: rawData.searches.length,
+      bySources,
+      authedSearches,
+      anonSearches: searches.length - authedSearches,
+      uniqueProfiles,
+      totalUsers: rawData.users.length,
+      newUsers: newUsers.length,
+      purchasingUsers: rawData.users.filter(u => (u.total_purchased || 0) > 0).length,
+      revenue,
+      creditsSold,
+      purchases,
+      searchesByDay,
+    };
+  }, [rawData, period]);
 
   if (!isAdmin) {
     return (
@@ -132,6 +148,8 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
     );
   }
 
+  const periodLabels: Record<Period, string> = { day: 'Today', week: 'This Week', month: 'This Month', all: 'All Time' };
+
   return (
     <main className="flex-1 mesh-bg min-h-screen">
       <nav className="border-b border-gray-200/60 bg-white/60 backdrop-blur-lg sticky top-0 z-10">
@@ -141,6 +159,21 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
           </button>
           <Logo size={28} />
           <span className="font-semibold text-gray-900 text-sm tracking-tight ml-3">Admin Dashboard</span>
+          <div className="ml-auto flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+            {(['day', 'week', 'month', 'all'] as Period[]).map(p => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  period === p
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {periodLabels[p]}
+              </button>
+            ))}
+          </div>
         </div>
       </nav>
 
@@ -152,49 +185,96 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
         ) : stats ? (
           <div className="space-y-8">
             {/* Top-level stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-              <StatCard icon={<Search className="h-4 w-4" />} label="Searches today" value={stats.searchesToday} />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+              <StatCard icon={<Search className="h-4 w-4" />} label={`Searches (${periodLabels[period].toLowerCase()})`} value={stats.searches} />
               <StatCard icon={<BarChart3 className="h-4 w-4" />} label="All-time searches" value={stats.searchesAllTime} />
-              <StatCard icon={<Users className="h-4 w-4" />} label="Registered users" value={stats.totalUsers} />
-              <StatCard icon={<CreditCard className="h-4 w-4" />} label="Revenue" value={`€${stats.totalRevenue.toFixed(2)}`} />
-              <StatCard icon={<TrendingUp className="h-4 w-4" />} label="Credits sold" value={stats.totalCreditsSold} />
+              <StatCard icon={<Eye className="h-4 w-4" />} label="Unique profiles" value={stats.uniqueProfiles} />
+              <StatCard icon={<Users className="h-4 w-4" />} label="Total users" value={stats.totalUsers} />
+              <StatCard icon={<CreditCard className="h-4 w-4" />} label={`Revenue (${periodLabels[period].toLowerCase()})`} value={`€${stats.revenue.toFixed(2)}`} />
+              <StatCard icon={<TrendingUp className="h-4 w-4" />} label={`Credits sold (${periodLabels[period].toLowerCase()})`} value={stats.creditsSold} />
             </div>
 
-            {/* Today detail */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Detail cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Search breakdown */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Today's Searches</h3>
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Search Breakdown</h3>
                 <div className="space-y-2 text-sm">
-                  <Row label="Unique profiles" value={stats.uniqueProfiles} />
                   <Row label="Authenticated" value={stats.authedSearches} />
                   <Row label="Anonymous" value={stats.anonSearches} />
-                  {Object.entries(stats.bySources).map(([src, count]) => (
-                    <Row key={src} label={`Source: ${src}`} value={count} />
-                  ))}
-                  <Row label="Signups today" value={stats.signupsToday} />
+                  <div className="border-t border-gray-100 pt-2 mt-2">
+                    {Object.entries(stats.bySources)
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([src, count]) => (
+                        <Row key={src} label={src} value={count} />
+                      ))}
+                  </div>
                 </div>
               </div>
 
+              {/* Users */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Users</h3>
+                <div className="space-y-2 text-sm">
+                  <Row label="Total registered" value={stats.totalUsers} />
+                  <Row label={`New (${periodLabels[period].toLowerCase()})`} value={stats.newUsers} />
+                  <Row label="Paying users" value={stats.purchasingUsers} />
+                  <Row label="Conversion rate" value={stats.totalUsers > 0 ? `${((stats.purchasingUsers / stats.totalUsers) * 100).toFixed(1)}%` : '0%'} />
+                </div>
+              </div>
+
+              {/* Revenue */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Revenue</h3>
+                <div className="space-y-2 text-sm">
+                  <Row label={`Period revenue`} value={`€${stats.revenue.toFixed(2)}`} />
+                  <Row label="Period credits sold" value={stats.creditsSold} />
+                  <Row label="Purchases" value={stats.purchases.length} />
+                  {stats.purchases.length > 0 && (
+                    <Row label="Avg purchase" value={`€${(stats.revenue / stats.purchases.length).toFixed(2)}`} />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Conversion funnel */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-6">Conversion Funnel</h3>
+              <FunnelChart
+                steps={[
+                  { label: 'Total Searches', value: stats.searchesAllTime, color: '#e0f2f1' },
+                  { label: 'Unique Searchers', value: stats.totalUsers + stats.anonSearches, color: '#b2dfdb' },
+                  { label: 'Signed Up', value: stats.totalUsers, color: '#4db6ac' },
+                  { label: 'Purchased Credits', value: stats.purchasingUsers, color: '#2d7d7d' },
+                ]}
+              />
+            </div>
+
+            {/* Searches chart */}
+            {stats.searchesByDay.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Searches by Day</h3>
                 <div className="space-y-1">
-                  {stats.searchesByDay.map(({ day, count }) => (
-                    <div key={day} className="flex items-center gap-3 text-sm">
-                      <span className="text-gray-500 w-24 text-xs">{day}</span>
-                      <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
-                        <div
-                          className="h-full bg-[#2d7d7d] rounded-full"
-                          style={{ width: `${Math.max((count / Math.max(...stats.searchesByDay.map(d => d.count))) * 100, 2)}%` }}
-                        />
+                  {stats.searchesByDay.map(({ day, count }) => {
+                    const max = Math.max(...stats.searchesByDay.map(d => d.count));
+                    return (
+                      <div key={day} className="flex items-center gap-3 text-sm">
+                        <span className="text-gray-500 w-20 text-xs shrink-0">{formatDay(day)}</span>
+                        <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                          <div
+                            className="h-full bg-[#2d7d7d] rounded-full transition-all duration-300"
+                            style={{ width: `${Math.max((count / max) * 100, 2)}%` }}
+                          />
+                        </div>
+                        <span className="text-gray-700 font-medium w-8 text-right text-xs">{count}</span>
                       </div>
-                      <span className="text-gray-700 font-medium w-8 text-right text-xs">{count}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Purchases */}
+            {/* Purchase history */}
             {stats.purchases.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Purchase History</h3>
@@ -235,6 +315,38 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
       <div className="flex items-center gap-2 text-[#2d7d7d] mb-2">{icon}</div>
       <div className="text-2xl font-bold text-gray-900">{value}</div>
       <div className="text-xs text-gray-500 mt-0.5">{label}</div>
+    </div>
+  );
+}
+
+function FunnelChart({ steps }: { steps: Array<{ label: string; value: number; color: string }> }) {
+  const max = Math.max(...steps.map(s => s.value), 1);
+  return (
+    <div className="space-y-3">
+      {steps.map((step, i) => {
+        const widthPct = Math.max((step.value / max) * 100, 8);
+        const prevValue = i > 0 ? steps[i - 1].value : null;
+        const dropRate = prevValue && prevValue > 0 ? ((1 - step.value / prevValue) * 100).toFixed(0) : null;
+        return (
+          <div key={step.label}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-gray-600 font-medium">{step.label}</span>
+              <div className="flex items-center gap-2">
+                {dropRate !== null && (
+                  <span className="text-[10px] text-gray-400">-{dropRate}%</span>
+                )}
+                <span className="text-sm font-bold text-gray-900">{step.value.toLocaleString()}</span>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <div
+                className="h-8 rounded-lg transition-all duration-500"
+                style={{ width: `${widthPct}%`, backgroundColor: step.color }}
+              />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
