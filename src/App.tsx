@@ -249,6 +249,7 @@ function AppContent() {
   const authControls = (
     <AuthHeaderControls
       onBuyCredits={() => setShowCreditPacks(true)}
+      onAdmin={() => handleNavigate('admin')}
       anonSearchesUsed={getAnonSearches()}
       anonFreeLimit={ANON_FREE_LIMIT}
     />

@@ -1,16 +1,20 @@
 import React from 'react';
-import { Coins } from 'lucide-react';
+import { Coins, Shield } from 'lucide-react';
 import { AuthButton } from './AuthButton';
 import { useAuth } from '../contexts/AuthContext';
 
+const ADMIN_EMAIL = 'jonasheller89@gmail.com';
+
 interface AuthHeaderControlsProps {
   onBuyCredits: () => void;
+  onAdmin?: () => void;
   anonSearchesUsed?: number;
   anonFreeLimit?: number;
 }
 
-export function AuthHeaderControls({ onBuyCredits, anonSearchesUsed = 0, anonFreeLimit = 3 }: AuthHeaderControlsProps) {
+export function AuthHeaderControls({ onBuyCredits, onAdmin, anonSearchesUsed = 0, anonFreeLimit = 3 }: AuthHeaderControlsProps) {
   const { user, credits } = useAuth();
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
   return (
     <div className="flex items-center gap-2">
@@ -33,6 +37,15 @@ export function AuthHeaderControls({ onBuyCredits, anonSearchesUsed = 0, anonFre
         >
           <Coins className="h-3 w-3" />
           {credits} credits
+        </button>
+      )}
+      {isAdmin && onAdmin && (
+        <button
+          onClick={onAdmin}
+          className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+          title="Admin Dashboard"
+        >
+          <Shield className="h-4 w-4" />
         </button>
       )}
       <AuthButton />
