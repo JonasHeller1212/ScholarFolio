@@ -85,7 +85,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({ email, password });
-    return { error: error?.message ?? null };
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('already registered') || msg.includes('already been registered') || msg.includes('duplicate') || msg.includes('unique constraint')) {
+        return { error: 'This email is already registered. If you signed up with Google, please use "Continue with Google" to sign in.' };
+      }
+      return { error: error.message };
+    }
+    return { error: null };
   };
 
   const signInWithGoogle = async () => {
