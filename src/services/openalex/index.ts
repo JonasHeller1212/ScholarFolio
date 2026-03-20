@@ -22,7 +22,7 @@ export class OpenAlexService {
 
       // Step 2: Get works grouped by OA status
       await rateLimiter.acquireToken();
-      const worksUrl = `${this.API_URL}/works?filter=authorships.author.id:${authorId}&group_by=open_access.oa_status&per_page=0&mailto=${this.EMAIL}`;
+      const worksUrl = `${this.API_URL}/works?filter=authorships.author.id:${authorId}&group_by=open_access.oa_status&per_page=10&mailto=${this.EMAIL}`;
       const worksResponse = await fetch(worksUrl, {
         headers: this.headers,
         signal: AbortSignal.timeout(10000)
@@ -40,7 +40,7 @@ export class OpenAlexService {
 
       if (total === 0) return null;
 
-      const gold = groups['gold'] || 0;
+      const gold = (groups['gold'] || 0) + (groups['diamond'] || 0);
       const green = groups['green'] || 0;
       const hybrid = groups['hybrid'] || 0;
       const bronze = groups['bronze'] || 0;
