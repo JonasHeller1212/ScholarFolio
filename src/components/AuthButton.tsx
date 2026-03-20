@@ -33,7 +33,8 @@ export function AuthButton() {
         if (error) {
           setError(error);
         } else {
-          setConfirmSent(true);
+          setShowModal(false);
+          resetForm();
         }
       } else {
         const { error } = await signIn(email, password);

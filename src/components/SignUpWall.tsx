@@ -33,7 +33,7 @@ export function SignUpWall({ onClose }: SignUpWallProps) {
         if (error) {
           setError(error);
         } else {
-          setConfirmSent(true);
+          onClose();
         }
       } else {
         const { error } = await signIn(email, password);
